@@ -23,7 +23,7 @@ export default async function FacilitiesPage() {
                         return (
                             <li key={f.id} className={`grid items-center gap-6 overflow-hidden rounded-[1.5rem] ${t.bg} md:grid-cols-2`}>
                                 <div className={`relative aspect-[16/10] md:h-full ${i % 2 ? "md:order-2" : ""}`}>
-                                    <Photo image={f.image} fill sizes="(min-width:768px) 600px, 100vw" />
+                                    <Photo image={f.image} fill ratio={1.1} sizes="(min-width:768px) 600px, 100vw" />
                                 </div>
                                 <div className="p-6 sm:p-10">
                                     <span className={`text-sm font-semibold tabular-nums ${t.text}`}>{String(i + 1).padStart(2, "0")}</span>

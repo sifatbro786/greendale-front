@@ -17,7 +17,7 @@ export const img = {
     artStage: { src: "/images/art-exhibition-stage.jpg", width: 2400, height: 1807, alt: "Greendale students on stage at the KPR International Art exhibition" },
     artPrize: { src: "/images/art-exhibition-prize.jpg", width: 2400, height: 1351, alt: "Students receiving prizes at the art exhibition ceremony" },
     artWinners: { src: "/images/art-exhibition-winners.jpg", width: 2400, height: 1351, alt: "Young artists holding their certificates and prizes" },
-    playZone: { src: "/images/play-zone.jpg", width: 2160, height: 1216, alt: "Children dancing in the kids' play zone with slides behind them" },
+    playZone: { src: "/images/play-zone.jpg", width: 1672, height: 941, alt: "Children dancing in the kids' play zone with slides behind them" },
     classroomWalls: { src: "/images/classroom-walls.jpg", width: 1440, height: 808, alt: "Classroom with number charts and cartoon learning walls" },
     wsIsAmAre: { src: "/images/worksheet-is-am-are.jpg", width: 1024, height: 1536, alt: "Grade 1 English worksheet on is, am and are" },
     wsVerbs: { src: "/images/worksheet-action-verbs.jpg", width: 1024, height: 1536, alt: "Grade 1 English worksheet on action verbs" },

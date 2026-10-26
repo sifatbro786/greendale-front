@@ -55,7 +55,7 @@ async function NewsPostContent({ params }) {
             </div>
             <div className="container-x mt-10 max-w-5xl">
                 <div className="relative aspect-[16/9] overflow-hidden rounded-[1.5rem]">
-                    <Photo image={p.cover} fill sizes="(min-width:1024px) 1000px, 100vw" priority />
+                    <Photo image={p.cover} fill ratio={16 / 9} sizes="(min-width:1024px) 1000px, 100vw" priority />
                 </div>
             </div>
             <div className="container-x mt-10 max-w-3xl">
@@ -66,7 +66,7 @@ async function NewsPostContent({ params }) {
                             .filter((i) => i.src !== p.cover.src)
                             .map((i) => (
                                 <li key={i.src} className="relative aspect-[4/3] overflow-hidden rounded-[1.1rem]">
-                                    <Photo image={i} fill sizes="(min-width:640px) 380px, 100vw" />
+                                    <Photo image={i} fill ratio={4 / 3} sizes="(min-width:640px) 380px, 100vw" />
                                 </li>
                             ))}
                     </ul>
@@ -86,7 +86,7 @@ async function NewsPostContent({ params }) {
                             <li key={m.id}>
                                 <Link href={`/news/${m.slug}`} className="group block">
                                     <div className="relative aspect-[4/3] overflow-hidden rounded-[1.1rem]">
-                                        <Photo image={m.cover} fill sizes="(min-width:640px) 380px, 100vw" />
+                                        <Photo image={m.cover} fill ratio={4 / 3} sizes="(min-width:640px) 380px, 100vw" />
                                     </div>
                                     <h3 className="mt-3 leading-snug font-semibold text-ink group-hover:text-brand-deep">{m.title}</h3>
                                 </Link>

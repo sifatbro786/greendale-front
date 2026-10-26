@@ -15,10 +15,10 @@ export default function About() {
                 {/* Overlapping photos + rotating badge */}
                 <div className="relative mx-auto w-full max-w-[560px] pb-10 sm:pb-0">
                     <div className="relative aspect-[4/5] w-[68%] overflow-hidden rounded-[1.5rem] shadow-[0_30px_60px_-30px_rgba(21,36,27,.5)]">
-                        <Photo image={img.drawingClass} fill sizes="(min-width:1024px) 380px, 66vw" />
+                        <Photo image={img.drawingClass} fill ratio={4 / 5} sizes="(min-width:1024px) 380px, 66vw" />
                     </div>
-                    <div className="absolute right-0 bottom-0 aspect-[3/4] w-[50%] rotate-2 overflow-hidden rounded-[1.25rem] border-[6px] border-paper shadow-[0_24px_50px_-24px_rgba(21,36,27,.55)] sm:-bottom-6">
-                        <Photo image={img.birthday} fill sizes="(min-width:1024px) 280px, 50vw" />
+                    <div className="absolute right-0 bottom-0 aspect-[3/4] w-[50%] overflow-hidden rounded-[1.25rem] border-[6px] border-paper shadow-[0_24px_50px_-24px_rgba(21,36,27,.55)] sm:-bottom-6">
+                        <Photo image={img.birthday} fill ratio={3 / 4} sizes="(min-width:1024px) 280px, 50vw" />
                     </div>
                     <Tape className="top-[52%] right-[30%] rotate-[-28deg]" tone="coral" />
                     <RotatingBadge

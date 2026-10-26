@@ -29,7 +29,7 @@ export default async function GalleryPage() {
                             <li key={a.id}>
                                 <Link href={`/gallery/${a.slug}`} className="group block">
                                     <div className="relative aspect-[4/5] overflow-hidden rounded-[1.25rem]">
-                                        <Photo image={a.cover} fill sizes="(min-width:1024px) 290px, (min-width:640px) 50vw, 100vw" className="transition-transform duration-700 group-hover:scale-105" />
+                                        <Photo image={a.cover} fill ratio={4 / 5} sizes="(min-width:1024px) 290px, (min-width:640px) 50vw, 100vw" className="transition-transform duration-700 group-hover:scale-105" />
                                         <span className="absolute top-3 left-3 rounded-full bg-white/95 px-2.5 py-1 text-[12.5px] font-semibold text-ink">
                                             {a.images.length} photos
                                         </span>

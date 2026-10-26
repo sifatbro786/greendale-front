@@ -21,9 +21,9 @@ export default function Hero() {
         <section className="px-2 pt-2 sm:px-4 sm:pt-4" aria-labelledby="hero-title">
             <div className="relative isolate overflow-hidden rounded-[1.75rem] bg-brand-deep sm:rounded-[2.25rem]">
                 <HeroVideo src={video.hero.src} poster={video.hero.poster} />
-                <div className="absolute inset-0 -z-10 bg-linear-to-tr from-[#06321a]/95 via-[#0b4a27]/70 to-[#0b4a27]/10" aria-hidden="true" />
+                <div className="absolute inset-0 -z-10 hidden bg-linear-to-tr from-[#06321a]/95 via-[#0b4a27]/70 to-[#0b4a27]/10 lg:block" aria-hidden="true" />
 
-                <div className="container-x grid min-h-[min(80svh,760px)] items-end gap-10 pb-8 sm:pb-12 lg:grid-cols-[1.5fr_1fr] lg:pb-16">
+                <div className="container-x grid items-end gap-10 pt-4 pb-8 sm:pb-12 lg:min-h-[min(80svh,760px)] lg:grid-cols-[1.5fr_1fr] lg:pb-16">
                     <div className="max-w-3xl">
                         <p className="inline-flex -rotate-1 items-center gap-2 rounded-full bg-sun px-3.5 py-1.5 text-[13.5px] font-semibold text-ink shadow-[0_3px_0_rgba(0,0,0,.25)]">
                             <span className="relative flex size-2">

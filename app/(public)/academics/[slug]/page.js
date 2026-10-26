@@ -101,7 +101,7 @@ function Worksheets() {
     return (
         <ul className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {sheets.map((s, i) => (
-                <li key={s.src} className={`overflow-hidden rounded-lg border-4 border-white bg-white shadow-[0_18px_36px_-20px_rgba(21,36,27,.5)] ${i % 2 ? "rotate-1" : "-rotate-1"}`}>
+                <li key={s.src} className={`overflow-hidden rounded-lg border-4 border-white bg-white shadow-[0_18px_36px_-20px_rgba(21,36,27,.5)] `}>
                     <Photo image={s} sizes="(min-width:640px) 260px, 50vw" className="h-auto w-full" />
                 </li>
             ))}
@@ -115,7 +115,7 @@ function ActivityPhotos() {
         <ul className="mt-10 grid gap-4 sm:grid-cols-2">
             {photos.map((p) => (
                 <li key={p.src} className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem]">
-                    <Photo image={p} fill sizes="(min-width:640px) 420px, 100vw" />
+                    <Photo image={p} fill ratio={4 / 3} sizes="(min-width:640px) 420px, 100vw" />
                 </li>
             ))}
         </ul>

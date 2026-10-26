@@ -36,8 +36,8 @@ export default function PageHeader({ title, summary, crumbs = [], image, tone = 
                 </div>
                 {image && (
                     <div className="relative hidden lg:block">
-                        <div className="relative aspect-[4/3] rotate-[1.5deg] overflow-hidden rounded-[1.75rem] border-[6px] border-white shadow-[0_24px_50px_-24px_rgba(21,36,27,.45)]">
-                            <Photo image={image} fill sizes="(min-width:1024px) 520px, 0px" priority />
+                        <div className="relative aspect-[4/3] overflow-hidden rounded-[1.75rem] border-[6px] border-white shadow-[0_24px_50px_-24px_rgba(21,36,27,.45)]">
+                            <Photo image={image} fill ratio={4 / 3} sizes="(min-width:1024px) 520px, 1px" priority />
                         </div>
                         <Sparkle className="absolute -top-4 -left-4 size-9 text-sun" />
                     </div>

@@ -38,7 +38,7 @@ export default function CampusLife() {
                             <li key={c.title} className={i === 1 ? "lg:translate-y-8" : ""}>
                                 <Link href={c.href} className="group block">
                                     <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem]">
-                                        <Photo image={c.image} fill sizes="(min-width:1024px) 380px, (min-width:640px) 50vw, 100vw" className="transition-transform duration-700 group-hover:scale-105" />
+                                        <Photo image={c.image} fill ratio={4 / 3} sizes="(min-width:1024px) 380px, (min-width:640px) 50vw, 100vw" className="transition-transform duration-700 group-hover:scale-105" />
                                     </div>
                                     <div className="mt-4 flex items-start justify-between gap-4">
                                         <div>

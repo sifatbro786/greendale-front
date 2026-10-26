@@ -56,7 +56,7 @@ export default function Updates({ notices, news }) {
                     {lead && (
                         <Link href={`/news/${lead.slug}`} className="group relative block overflow-hidden rounded-[1.5rem]">
                             <div className="relative aspect-[16/10]">
-                                <Photo image={lead.cover} fill sizes="(min-width:1024px) 600px, 100vw" className="transition-transform duration-700 group-hover:scale-105" />
+                                <Photo image={lead.cover} fill ratio={16 / 10} sizes="(min-width:1024px) 600px, 100vw" className="transition-transform duration-700 group-hover:scale-105" />
                                 <div className="absolute inset-0 bg-linear-to-t from-ink/85 via-ink/20 to-transparent" />
                             </div>
                             <div className="absolute right-0 bottom-0 left-0 p-6 text-white">
@@ -70,7 +70,7 @@ export default function Updates({ notices, news }) {
                             <li key={p.id}>
                                 <Link href={`/news/${p.slug}`} className="group flex gap-4 rounded-2xl border border-line bg-white p-3">
                                     <div className="relative aspect-square w-24 shrink-0 overflow-hidden rounded-xl">
-                                        <Photo image={p.cover} fill sizes="96px" />
+                                        <Photo image={p.cover} fill ratio={1} sizes="96px" />
                                     </div>
                                     <div className="py-1">
                                         <time dateTime={p.publishedAt} className="text-[13px] text-ink-soft">{formatDate(p.publishedAt)}</time>

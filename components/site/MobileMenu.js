@@ -2,12 +2,17 @@
 
 import { Menu, Phone, X } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
+
+const noop = () => () => {};
 
 import { WhatsAppIcon } from "./SocialIcons";
 
 export default function MobileMenu({ navigation, quickLinks, phone }) {
     const [open, setOpen] = useState(false);
+    // true only in the browser, after hydration (no SSR/CSR mismatch)
+    const isClient = useSyncExternalStore(noop, () => true, () => false);
 
     useEffect(() => {
         if (!open) return;
@@ -35,6 +40,9 @@ export default function MobileMenu({ navigation, quickLinks, phone }) {
                 <Menu className="size-5" aria-hidden="true" />
             </button>
 
+            {/* Portal to <body>: the sticky header uses backdrop-filter, which would otherwise trap this fixed overlay inside the 72px bar. */}
+            {isClient &&
+                createPortal(
             <div
                 className={`fixed inset-0 z-50 overflow-hidden transition-[visibility] duration-300 lg:hidden ${open ? "visible" : "pointer-events-none invisible"}`}
                 aria-hidden={!open}
@@ -116,7 +124,9 @@ export default function MobileMenu({ navigation, quickLinks, phone }) {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div>,
+                    document.body,
+                )}
         </>
     );
 }

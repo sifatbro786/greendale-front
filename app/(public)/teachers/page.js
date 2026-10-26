@@ -60,7 +60,7 @@ export default async function TeachersPage() {
                 ) : (
                     <div className="grid items-center gap-10 rounded-[1.5rem] bg-white p-6 sm:p-10 lg:grid-cols-2">
                         <div className="relative aspect-[16/9] overflow-hidden rounded-[1.25rem]">
-                            <Photo image={img.classroomSmiles} fill sizes="(min-width:1024px) 520px, 100vw" />
+                            <Photo image={img.classroomSmiles} fill ratio={16 / 9} sizes="(min-width:1024px) 520px, 100vw" />
                         </div>
                         <div>
                             <h2 className="text-2xl font-semibold text-ink">Teacher profiles are coming soon</h2>

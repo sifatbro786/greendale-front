@@ -15,7 +15,7 @@ export default function Chairman() {
                 <div className="relative">
                     <Tape className="-top-3 left-8 z-10 -rotate-6" tone="coral" />
                     <Tape className="-right-3 -bottom-2 z-10 rotate-[-38deg]" tone="sky" />
-                    <div className="rotate-[-0.8deg] rounded-[1.5rem] bg-white p-2.5 shadow-[0_30px_60px_-30px_rgba(21,36,27,.45)]">
+                    <div className="rounded-[1.5rem] bg-white p-2.5 shadow-[0_30px_60px_-30px_rgba(21,36,27,.45)]">
                         <LiteYouTube id={v.id} title={v.title} className="rounded-[1.1rem]" />
                     </div>
                 </div>

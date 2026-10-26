@@ -25,7 +25,7 @@ export default function WhyUs() {
                         intro="These are the things Greendale parents mention most when they recommend us to friends."
                     />
                     <figure className="relative mt-10 hidden aspect-[16/10] overflow-hidden rounded-[1.5rem] lg:block">
-                        <Photo image={img.playZone} fill sizes="480px" />
+                        <Photo image={img.playZone} fill ratio={16 / 10} sizes="480px" />
                         <figcaption className="absolute bottom-3 left-3 rounded-full bg-white/95 px-3 py-1.5 text-[13px] font-semibold text-ink">
                             Our kids&apos; play zone
                         </figcaption>

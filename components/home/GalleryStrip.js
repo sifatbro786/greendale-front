@@ -35,7 +35,7 @@ export default function GalleryStrip() {
 function Tile({ image, className = "", sizes }) {
     return (
         <Link href="/gallery" className={`group relative block overflow-hidden rounded-[1.25rem] ${className}`}>
-            <Photo image={image} fill sizes={sizes} className="transition-transform duration-700 group-hover:scale-105" />
+            <Photo image={image} fill ratio={1.2} sizes={sizes} className="transition-transform duration-700 group-hover:scale-105" />
         </Link>
     );
 }

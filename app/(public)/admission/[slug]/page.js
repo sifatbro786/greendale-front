@@ -129,7 +129,7 @@ async function AdmissionContent({ params }) {
 
                     <section aria-labelledby="uniform" className="grid items-center gap-8 rounded-[1.5rem] bg-white p-6 sm:grid-cols-[220px_1fr] sm:p-8">
                         <div className="relative mx-auto aspect-[4/5] w-48 overflow-hidden rounded-2xl sm:w-full">
-                            <Photo image={img.dressCode} fill sizes="220px" />
+                            <Photo image={img.dressCode} fill ratio={4 / 5} sizes="220px" />
                         </div>
                         <div>
                             <h2 id="uniform" className="text-2xl font-semibold text-ink">School uniform</h2>

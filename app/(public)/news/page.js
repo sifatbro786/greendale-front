@@ -21,7 +21,7 @@ export default async function NewsPage() {
                 {lead && (
                     <Link href={`/news/${lead.slug}`} className="group grid overflow-hidden rounded-[1.5rem] border border-line bg-white lg:grid-cols-[1.3fr_1fr]">
                         <div className="relative aspect-[16/10] lg:aspect-auto lg:min-h-[360px]">
-                            <Photo image={lead.cover} fill sizes="(min-width:1024px) 700px, 100vw" priority className="transition-transform duration-700 group-hover:scale-[1.03]" />
+                            <Photo image={lead.cover} fill ratio={16 / 10} sizes="(min-width:1024px) 900px, 100vw" priority className="transition-transform duration-700 group-hover:scale-[1.03]" />
                         </div>
                         <div className="flex flex-col justify-center p-6 sm:p-10">
                             <time dateTime={lead.publishedAt} className="text-[14px] text-ink-soft">{formatDate(lead.publishedAt)}</time>
@@ -36,7 +36,7 @@ export default async function NewsPage() {
                         <li key={p.id}>
                             <Link href={`/news/${p.slug}`} className="group block">
                                 <div className="relative aspect-[4/3] overflow-hidden rounded-[1.25rem]">
-                                    <Photo image={p.cover} fill sizes="(min-width:1024px) 380px, (min-width:640px) 50vw, 100vw" className="transition-transform duration-700 group-hover:scale-105" />
+                                    <Photo image={p.cover} fill ratio={4 / 3} sizes="(min-width:1024px) 380px, (min-width:640px) 50vw, 100vw" className="transition-transform duration-700 group-hover:scale-105" />
                                 </div>
                                 <time dateTime={p.publishedAt} className="mt-4 block text-[14px] text-ink-soft">{formatDate(p.publishedAt)}</time>
                                 <h2 className="mt-1 text-lg leading-snug font-semibold text-ink group-hover:text-brand-deep">{p.title}</h2>

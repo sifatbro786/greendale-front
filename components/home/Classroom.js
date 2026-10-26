@@ -9,9 +9,9 @@ import SectionHeading from "../ui/SectionHeading";
 /** Real worksheets from Greendale classes, fanned like papers on a desk. */
 export default function Classroom() {
     const sheets = [
-        { image: img.wsIsAmAre, cls: "-rotate-6 translate-y-6" },
-        { image: img.wsPhonics, cls: "z-10 rotate-1 -translate-y-2 scale-105" },
-        { image: img.wsVerbs, cls: "rotate-6 translate-y-8" },
+        { image: img.wsIsAmAre, cls: "translate-y-6" },
+        { image: img.wsPhonics, cls: "z-10 -translate-y-2" },
+        { image: img.wsVerbs, cls: "translate-y-8" },
     ];
     const points = [
         ["Phonics", "Short vowels, digraphs, blends and sight words, one step at a time."],
@@ -46,7 +46,7 @@ export default function Classroom() {
                             key={s.image.src}
                             className={`relative -mx-6 aspect-[2/3] w-1/3 max-w-[200px] overflow-hidden rounded-md border-4 border-white bg-white shadow-[0_20px_40px_-18px_rgba(21,36,27,.5)] transition-transform duration-300 hover:z-20 hover:-translate-y-3 sm:-mx-4 ${s.cls}`}
                         >
-                            <Photo image={s.image} fill sizes="(min-width:1024px) 200px, 33vw" />
+                            <Photo image={s.image} fill ratio={2 / 3} sizes="(min-width:1024px) 200px, 33vw" />
                         </div>
                     ))}
                 </div>

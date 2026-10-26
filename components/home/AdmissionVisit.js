@@ -38,7 +38,7 @@ export default function AdmissionVisit({ steps }) {
                     </div>
                 </div>
                 <div className="relative min-h-[280px] bg-brand-deep">
-                    <Photo image={img.scienceProject} fill sizes="(min-width:1024px) 480px, 100vw" />
+                    <Photo image={img.scienceProject} fill ratio={0.9} sizes="(min-width:1024px) 480px, 100vw" />
                     <div className="absolute right-4 bottom-4 left-4 flex items-start gap-3 rounded-2xl bg-white p-4 text-ink shadow-lg">
                         <MapPin className="mt-0.5 size-5 shrink-0 text-coral" aria-hidden="true" />
                         <div className="text-[14.5px] leading-snug">
