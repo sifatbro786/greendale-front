@@ -33,7 +33,13 @@ const nextConfig = {
      */
     async rewrites() {
         if (DATA_MODE !== "live") return [];
-        return { beforeFiles: [{ source: "/api/:path*", destination: `${API_INTERNAL_URL}/api/:path*` }] };
+        return {
+            beforeFiles: [
+                { source: "/api/:path*", destination: `${API_INTERNAL_URL}/api/:path*` },
+                // CMS uploads. On the VPS Nginx serves /uploads/public from disk before Next sees it.
+                { source: "/uploads/public/:path*", destination: `${API_INTERNAL_URL}/uploads/public/:path*` },
+            ],
+        };
     },
     async headers() {
         return [
