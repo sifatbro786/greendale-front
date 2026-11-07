@@ -19,7 +19,8 @@ export default async function MarksheetPage({ params }) {
     // Unpublished or unknown exam → 404 (guardians never see drafts).
     const r = await studentMarksheet(user.studentId, examId);
     if (!r) notFound();
-    const s = await getStudent(user.studentId);
+    // Snapshot keeps the class and roll of that exam (correct even after promotion). Demo falls back to the profile.
+    const s = r.student ? { name: r.student.name, studentUid: r.student.studentUid, section: r.section, roll: r.roll } : await getStudent(user.studentId);
     return (
         <>
             <div className="print:hidden">
@@ -32,7 +33,7 @@ export default async function MarksheetPage({ params }) {
                     <p className="text-[13px] text-ink-soft">
                         {school.contact.addressShort} · EIIN {school.eiin}
                     </p>
-                    <p className="mt-3 inline-block rounded-full bg-brand px-4 py-1 text-[13px] font-semibold tracking-wider text-white uppercase">Academic transcript · {r.exam.name}</p>
+                    <p className="mt-3 inline-block rounded-full bg-brand px-4 py-1 text-[13px] font-semibold tracking-wider text-white uppercase">{r.remarksMode ? "Progress report" : "Academic transcript"} · {r.exam.name}</p>
                 </header>
                 <dl className="mt-6 grid grid-cols-2 gap-3 rounded-xl bg-paper p-4 text-[14px] sm:grid-cols-4">
                     <div>
@@ -58,8 +59,14 @@ export default async function MarksheetPage({ params }) {
                             <th className="py-2 font-semibold">Subject</th>
                             <th className="px-2 py-2 text-right font-semibold">Full</th>
                             <th className="px-2 py-2 text-right font-semibold">Obtained</th>
-                            <th className="px-2 py-2 text-center font-semibold">Grade</th>
-                            <th className="py-2 text-right font-semibold">Point</th>
+                            {r.remarksMode ? (
+                                <th className="py-2 pl-4 font-semibold">Remark</th>
+                            ) : (
+                                <>
+                                    <th className="px-2 py-2 text-center font-semibold">Grade</th>
+                                    <th className="py-2 text-right font-semibold">Point</th>
+                                </>
+                            )}
                         </tr>
                     </thead>
                     <tbody>
@@ -67,26 +74,41 @@ export default async function MarksheetPage({ params }) {
                             <tr key={l.subject} className="border-b border-line">
                                 <td className="py-2.5">{l.subject}</td>
                                 <td className="py-2.5 text-right tabular-nums">{l.full}</td>
-                                <td className={`py-2.5 text-right font-medium tabular-nums ${l.absent || l.point === 0 ? "text-coral" : ""}`}>{l.absent ? "Absent" : l.obtained}</td>
-                                <td className="py-2.5 text-center font-semibold">{l.grade}</td>
-                                <td className="py-2.5 text-right tabular-nums">{l.point.toFixed(2)}</td>
+                                <td className={`py-2.5 text-right font-medium tabular-nums ${l.absent || (!r.remarksMode && l.point === 0) ? "text-coral" : ""}`}>{l.absent ? "Absent" : (l.obtained ?? "—")}</td>
+                                {r.remarksMode ? (
+                                    <td className="py-2.5 pl-4 text-[14px] text-ink">{l.remarks ?? "—"}</td>
+                                ) : (
+                                    <>
+                                        <td className="py-2.5 text-center font-semibold">{l.grade}</td>
+                                        <td className="py-2.5 text-right tabular-nums">{l.point.toFixed(2)}</td>
+                                    </>
+                                )}
                             </tr>
                         ))}
                     </tbody>
                 </table></div>
                 <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                    {[
-                        ["Total", `${r.total} / ${r.fullTotal}`],
-                        ["GPA", r.gpa.toFixed(2)],
-                        ["Grade", r.grade],
-                        ["Position", `${r.position} of ${r.outOf}`],
-                    ].map(([k, v]) => (
+                    {(r.remarksMode
+                        ? [["Total", `${r.total} / ${r.fullTotal}`]]
+                        : [
+                              ["Total", `${r.total} / ${r.fullTotal}`],
+                              ["GPA", r.gpa.toFixed(2)],
+                              ["Grade", r.grade],
+                              ["Position", r.position ? `${r.position} of ${r.outOf}` : "—"],
+                          ]
+                    ).map(([k, v]) => (
                         <div key={k} className="rounded-xl border border-line p-3 text-center">
                             <p className="text-[12px] tracking-wide text-ink-soft uppercase">{k}</p>
                             <p className="mt-0.5 text-lg font-semibold">{v}</p>
                         </div>
                     ))}
                 </div>
+                {r.remark && (
+                    <p className="mt-6 rounded-xl border border-line p-4 text-[14.5px]">
+                        <span className="block text-[12px] tracking-wide text-ink-soft uppercase">Class teacher&apos;s remark</span>
+                        {r.remark}
+                    </p>
+                )}
                 <footer className="mt-12 flex justify-between text-[12.5px] text-ink-soft">
                     <span className="border-t border-ink/30 pt-1">Class teacher</span>
                     <span className="border-t border-ink/30 pt-1">Principal</span>

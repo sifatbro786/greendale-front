@@ -3,6 +3,8 @@ import Image from "next/image";
 import { school } from "@/config/school";
 import { formatDateTime, formatMoney } from "@/lib/format";
 
+const METHOD = { CASH: "Cash", BANK: "Bank", BKASH: "bKash", NAGAD: "Nagad", ROCKET: "Rocket", CARD: "Card" };
+
 /** Printable money receipt (same template the worker will render to PDF in Phase 2). */
 export default function Receipt({ data }) {
     const { payment: p, student, lines, collectedBy } = data;
@@ -58,8 +60,16 @@ export default function Receipt({ data }) {
                             <td className="py-2.5 text-right tabular-nums">{formatMoney(l.amount)}</td>
                         </tr>
                     ))}
+                    {data.advance > 0 && (
+                        <tr className="border-b border-line">
+                            <td className="py-2.5">
+                                Advance <span className="text-ink-soft">· kept as credit</span>
+                            </td>
+                            <td className="py-2.5 text-right tabular-nums">{formatMoney(data.advance)}</td>
+                        </tr>
+                    )}
                     <tr>
-                        <td className="py-3 font-semibold">Total paid ({p.method === "BKASH" ? "bKash" : p.method === "CARD" ? "Card" : "Cash"})</td>
+                        <td className="py-3 font-semibold">Total paid ({METHOD[p.method] ?? p.method})</td>
                         <td className="py-3 text-right text-lg font-semibold tabular-nums">{formatMoney(p.amount)}</td>
                     </tr>
                 </tbody>

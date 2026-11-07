@@ -1,17 +1,21 @@
 "use client";
 
-import { CreditCard, Smartphone } from "lucide-react";
+import { CreditCard, Loader2, Smartphone } from "lucide-react";
 import { useState } from "react";
+
+import { api } from "@/lib/api/client";
 
 import Modal from "./Modal";
 import { useToast } from "./Toast";
 
 /**
- * Online payment (PRD §10.3). Phase 2: POST /api/payments/session → redirect to SSLCommerz / bKash.
- * Success is recorded ONLY from the gateway IPN + validation API (idempotent on tran_id), never from this page.
+ * Online payment (PRD §10.3). Live: POST /api/payments/session → redirect to the SSLCommerz page
+ * (bKash, Nagad, cards and mobile banking are chosen there). Success is recorded ONLY from the gateway
+ * IPN + validation API (idempotent on tran_id), never from this page.
  */
-export default function PayOnline({ due }) {
+export default function PayOnline({ due, demo = false }) {
     const [open, setOpen] = useState(false);
+    const [busy, setBusy] = useState(false);
     const [method, setMethod] = useState("bkash");
     const toast = useToast();
     const money = `৳ ${new Intl.NumberFormat("en-IN").format(due)}`;
@@ -34,12 +38,22 @@ export default function PayOnline({ due }) {
                         <button
                             type="button"
                             className="btn-primary min-h-10 text-[14px]"
-                            onClick={() => {
-                                setOpen(false);
-                                toast("Demo: you would be sent to the secure payment page. The receipt appears here once the gateway confirms.", { title: "Redirecting to gateway", tone: "info" });
+                            disabled={busy}
+                            onClick={async () => {
+                                if (demo) {
+                                    setOpen(false);
+                                    return toast("Demo: you would be sent to the secure payment page. The receipt appears here once the gateway confirms.", { title: "Redirecting to gateway", tone: "info" });
+                                }
+                                setBusy(true);
+                                const r = await api("/api/payments/session", { method: "POST", body: {} });
+                                if (!r.ok) {
+                                    setBusy(false);
+                                    return toast(r.error.message, { title: "Online payment", tone: "error" });
+                                }
+                                window.location.assign(r.data.redirectUrl);
                             }}
                         >
-                            Continue
+                            {busy && <Loader2 className="size-4 animate-spin" aria-hidden="true" />} Continue
                         </button>
                     </>
                 }

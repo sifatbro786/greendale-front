@@ -112,7 +112,7 @@ export default function PromoteDialog({ sections, sessions, onClose }) {
                                 <option value="keep">Keep the same rolls</option>
                                 <option value="name">1, 2, 3 … by name</option>
                             </select>
-                            <span className={hint}>Merit-based rolls come with results (Step 4).</span>
+                            <span className={hint}>Merit-based rolls are not available yet.</span>
                         </label>
                     </div>
                     <div className="rounded-xl border border-line">

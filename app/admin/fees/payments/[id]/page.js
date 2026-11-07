@@ -1,12 +1,13 @@
 import { notFound } from "next/navigation";
 
-import DemoButton from "@/components/dash/DemoButton";
+import ReverseButton from "@/components/dash/fees/ReverseButton";
 import PrintButton from "@/components/dash/PrintButton";
 import Receipt from "@/components/dash/Receipt";
 import { PageHead } from "@/components/dash/ui";
 import { can } from "@/lib/auth/permissions";
 import { requirePermission } from "@/lib/auth/session";
 import { getReceipt } from "@/lib/dashboard/fees";
+import { isDemo } from "@/lib/mode";
 
 export const metadata = { title: "Receipt" };
 
@@ -27,9 +28,7 @@ export default async function ReceiptPage({ params }) {
                     actions={
                         <>
                             {can(user, "fees.manage") && data.payment.status === "VALID" && (
-                                <DemoButton className="btn-ghost min-h-10 text-[14px]" title="Reverse payment" message="Demo: a reversal entry with a reason would be created and logged. The original receipt is kept.">
-                                    Reverse
-                                </DemoButton>
+                                <ReverseButton paymentId={data.payment.id} receiptNo={data.payment.receiptNo} demo={isDemo} />
                             )}
                             <PrintButton />
                         </>

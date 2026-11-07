@@ -1,8 +1,8 @@
 import MarksEntry from "@/components/dash/MarksEntry";
 import { PageHead } from "@/components/dash/ui";
 import { requirePermission } from "@/lib/auth/session";
-import { db, sectionLabel, subjectMap } from "@/lib/demo/dashboard/_shared";
-import { getMarksSheet, listExams } from "@/lib/dashboard/exams";
+import { getMarksSheet, listExams, marksOptions } from "@/lib/dashboard/exams";
+import { isDemo } from "@/lib/mode";
 
 export const metadata = { title: "Marks entry" };
 
@@ -11,27 +11,28 @@ export const instant = false;
 
 export default async function MarksPage() {
     const user = await requirePermission("marks.enter");
-    // Teacher sees only assigned section+subject pairs (PRD §6.3: Teacher A cannot load Teacher B's subject).
-    const pairs = db.assignments.filter((a) => user.role !== "TEACHER" || a.staffId === user.staffId);
-    const exams = (await listExams()).map(({ id, name, status }) => ({ id, name, status }));
-    const options = pairs.map((a) => ({ value: `${a.sectionId}|${a.subjectId}`, label: `${sectionLabel(a.sectionId)} · ${subjectMap.get(a.subjectId).name}` }));
+    // Teachers get only their assigned section + subject pairs (the API enforces it too: 404 otherwise).
+    const [all, pairs] = await Promise.all([listExams(), marksOptions(user)]);
+    const exams = all.map(({ id, name, status }) => ({ id, name, status }));
+    const options = pairs.map(({ value, label }) => ({ value, label }));
+    const open = exams.find((e) => e.status === "MARKS_OPEN")?.id ?? exams.at(-1)?.id;
+
+    // Demo: every sheet up front (static). Live: only the first sheet; the rest load on demand.
     const sheets = {};
-    for (const e of exams) {
-        for (const a of pairs) {
-            const s = await getMarksSheet(e.id, a.sectionId, a.subjectId);
-            if (s) sheets[`${e.id}|${a.sectionId}|${a.subjectId}`] = { ...s, rows: s.rows };
-        }
+    if (isDemo) for (const e of exams) for (const p of pairs) {
+        const s = await getMarksSheet(e.id, p.sectionId, p.subjectId);
+        if (s) sheets[`${e.id}|${p.value}`] = s;
     }
-    const open = exams.find((e) => e.status === "MARKS_OPEN")?.id ?? exams[0].id;
+    const initial = !isDemo && open && pairs[0] ? await getMarksSheet(open, pairs[0].sectionId, pairs[0].subjectId) : null;
 
     return (
         <>
             <PageHead
                 title="Marks entry"
-                description={user.role === "TEACHER" ? "Only your assigned subjects are listed. Press Enter to jump to the next student." : "Enter or review marks for any class and subject."}
+                description={user.role === "TEACHER" ? "Only your assigned subjects are listed. Press Enter to jump to the next student, then Save." : "Enter or review marks for any class and subject."}
                 crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Exams", href: "/admin/exams" }, { label: "Marks entry" }]}
             />
-            <MarksEntry exams={exams} options={options} sheets={sheets} initialExam={open} />
+            <MarksEntry exams={exams} options={options} sheets={sheets} initial={initial} initialExam={open} demo={isDemo} />
         </>
     );
 }

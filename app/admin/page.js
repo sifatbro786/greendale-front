@@ -7,7 +7,7 @@ import { Badge, Card, PageHead, Progress, StatCard } from "@/components/dash/ui"
 import { can } from "@/lib/auth/permissions";
 import { requireStaff } from "@/lib/auth/session";
 import { teacherSections } from "@/lib/dashboard/academics";
-import { attendanceSummary, attendanceTrend, TODAY } from "@/lib/dashboard/attendance";
+import { attendanceSummary, attendanceTrend, today as todayFn } from "@/lib/dashboard/attendance";
 import { listStaffNotices } from "@/lib/dashboard/comms";
 import { listExams, upcomingExams } from "@/lib/dashboard/exams";
 import { feeSummary } from "@/lib/dashboard/fees";
@@ -24,9 +24,10 @@ export default async function DashboardPage() {
     const user = await requireStaff();
     if (user.role === "TEACHER") return <TeacherHome user={user} />;
 
-    const [counts, att, trend, fees, exams, notices] = await Promise.all([studentCounts(), attendanceSummary(), attendanceTrend(14), feeSummary(), upcomingExams(), listStaffNotices()]);
-    const first = user.name.split(" ")[0];
     const canFees = can(user, "fees.view");
+    const TODAY = todayFn(); // after the auth read (cache components)
+    const [counts, att, trend, fees, exams, notices] = await Promise.all([studentCounts(), attendanceSummary(), attendanceTrend(14), canFees ? feeSummary() : null, upcomingExams(), listStaffNotices()]);
+    const first = user.name.split(" ")[0];
 
     return (
         <>
@@ -64,7 +65,7 @@ export default async function DashboardPage() {
                     </>
                 ) : (
                     <>
-                        <StatCard label="Upcoming exam" value={exams[0]?.name.replace(" Examination", "") ?? "—"} hint={exams[0] ? `Starts ${formatDate(exams[0].startDate)}` : ""} icon="ClipboardList" tone="sun" href="/admin/exams" />
+                        <StatCard label="Upcoming exam" value={exams[0]?.name.replace(" Examination", "") ?? "—"} hint={exams[0]?.startDate ? `Starts ${formatDate(exams[0].startDate)}` : ""} icon="ClipboardList" tone="sun" href="/admin/exams" />
                         <StatCard label="Staff notices" value={notices.length} hint="Latest from the office" icon="Megaphone" tone="coral" href="/admin/notices" />
                     </>
                 )}
@@ -145,7 +146,7 @@ async function ExamList() {
                         <Badge tone={e.status === "PUBLISHED" ? "green" : e.status === "MARKS_OPEN" ? "blue" : "yellow"}>{e.status === "MARKS_OPEN" ? "Marks open" : e.status.charAt(0) + e.status.slice(1).toLowerCase()}</Badge>
                     </div>
                     <p className="mt-0.5 mb-2 text-[12.5px] text-ink-soft">
-                        {formatDate(e.startDate)} – {formatDate(e.endDate)}
+                        {e.startDate ? `${formatDate(e.startDate)}${e.endDate ? ` – ${formatDate(e.endDate)}` : ""}` : "Dates not set"}
                     </p>
                     <Progress value={e.progress} tone={e.progress === 100 ? "brand" : "sky"} label={`${e.name} marks entered`} />
                 </li>
@@ -169,6 +170,7 @@ function QuickLink({ href, icon, title, text }) {
 
 /* ------------------------------ Teacher ------------------------------ */
 async function TeacherHome({ user }) {
+    const TODAY = todayFn();
     const [today, sections, att, notices, exams] = await Promise.all([teacherToday(user.staffId, TODAY), teacherSections(user.staffId), attendanceSummary(), listStaffNotices(), listExams()]);
     const mySections = att.sections.filter((s) => sections.some((x) => x.value === s.sectionId));
     const classTeacherOf = sections.filter((s) => s.isClassTeacher);

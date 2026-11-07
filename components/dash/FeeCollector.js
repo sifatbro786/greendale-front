@@ -1,8 +1,11 @@
 "use client";
 
-import { Printer, Search } from "lucide-react";
+import { Loader2, Printer, Search } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+
+import { api } from "@/lib/api/client";
 
 import Modal from "./Modal";
 import { useToast } from "./Toast";
@@ -11,10 +14,14 @@ const money = (n) => `৳ ${new Intl.NumberFormat("en-IN").format(n)}`;
 
 /**
  * Counter fee collection (PRD §6.7). Select dues, take full or partial payment, print a numbered receipt.
- * Phase 2: POST /api/fees/payments { studentId, amount, method, allocations[] } → receiptNo from a locked
- * counter row inside the same transaction (gap-free, never duplicated).
+ * Live: POST /api/fees/payments { studentId, amount, method, invoiceIds, clientRef } → the API locks the
+ * invoices, allocates oldest first and takes the receipt number from a locked counter row (gap free),
+ * then this screen opens the receipt for printing. clientRef is new per attempt, so a double tap is rejected.
+ * Demo: shows a receipt preview only.
  */
-export default function FeeCollector({ students, nextReceiptNo, collector }) {
+export default function FeeCollector({ students, collector, demo = false }) {
+    const router = useRouter();
+    const [busy, setBusy] = useState(false);
     const [q, setQ] = useState("");
     const [studentId, setStudentId] = useState(null);
     const [picked, setPicked] = useState({});
@@ -41,8 +48,21 @@ export default function FeeCollector({ students, nextReceiptNo, collector }) {
         setAmount("");
     }
 
-    function collect() {
+    async function collect() {
         if (!pay) return toast("Select at least one due and enter an amount.", { tone: "error", title: "Nothing to collect" });
+        if (!demo) {
+            if (busy) return;
+            setBusy(true);
+            const clientRef = crypto.randomUUID();
+            const r = await api("/api/fees/payments", { method: "POST", body: { studentId: s.id, amount: pay, method, invoiceIds: selected.map((d) => d.id), clientRef } });
+            if (!r.ok) {
+                setBusy(false);
+                return toast(Object.values(r.fieldErrors)[0] ?? r.error.message, { title: "Not collected", tone: "error" });
+            }
+            toast(`${money(r.data.payment.amount)} from ${s.name}`, { title: `Receipt ${r.data.payment.receiptNo} saved` });
+            router.push(`/admin/fees/payments/${r.data.payment.id}`);
+            return;
+        }
         // Allocate oldest dues first (partial payment leaves the remainder due).
         let left = pay;
         const lines = selected.map((d) => {
@@ -50,7 +70,7 @@ export default function FeeCollector({ students, nextReceiptNo, collector }) {
             left -= a;
             return { ...d, paid: a };
         }).filter((l) => l.paid > 0);
-        setReceipt({ no: nextReceiptNo, at: new Date().toISOString(), lines, total: pay, method, student: s });
+        setReceipt({ no: "GEVS-2026-•••••", at: new Date().toISOString(), lines, total: pay, method, student: s });
     }
 
     return (
@@ -126,12 +146,13 @@ export default function FeeCollector({ students, nextReceiptNo, collector }) {
                                         <select value={method} onChange={(e) => setMethod(e.target.value)} className="mt-1 h-11 w-full rounded-xl border border-line bg-white px-3 text-[15px]">
                                             <option value="CASH">Cash</option>
                                             <option value="BKASH">bKash (manual)</option>
+                                            <option value="NAGAD">Nagad (manual)</option>
                                             <option value="BANK">Bank deposit</option>
                                         </select>
                                     </label>
                                     <div className="flex flex-col justify-end">
-                                        <button type="button" onClick={collect} className="btn-primary min-h-11">
-                                            Collect {money(pay)}
+                                        <button type="button" onClick={collect} disabled={busy} className="btn-primary min-h-11">
+                                            {busy && <Loader2 className="size-4 animate-spin" aria-hidden="true" />} Collect {money(pay)}
                                         </button>
                                     </div>
                                     {pay < selectedTotal && pay > 0 && <p className="text-[13px] text-[#8a6a00] sm:col-span-3">Partial payment: {money(selectedTotal - pay)} will stay due, applied to the oldest months first.</p>}

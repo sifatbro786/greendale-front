@@ -1,14 +1,16 @@
-import { ClipboardList, FileSpreadsheet, Plus } from "lucide-react";
+import { ClipboardList, FileSpreadsheet } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
-import DemoButton from "@/components/dash/DemoButton";
+import ExamActions from "@/components/dash/exams/ExamActions";
+import NewExamButton from "@/components/dash/exams/NewExamButton";
 import { Badge, Card, PageHead, Progress } from "@/components/dash/ui";
 import { can } from "@/lib/auth/permissions";
 import { requireStaff } from "@/lib/auth/session";
-import { getGradeScale } from "@/lib/dashboard/academics";
+import { getGradeScale, listClasses } from "@/lib/dashboard/academics";
 import { EXAM_STATUSES, listExams } from "@/lib/dashboard/exams";
 import { formatDate } from "@/lib/format";
+import { isDemo } from "@/lib/mode";
 
 export const metadata = { title: "Exams & Results" };
 
@@ -23,7 +25,7 @@ export default async function ExamsPage() {
         if (can(user, "marks.enter")) redirect("/admin/exams/marks");
         redirect("/admin");
     }
-    const [exams, scale] = await Promise.all([listExams(), getGradeScale()]);
+    const [exams, scale, classes] = await Promise.all([listExams(), getGradeScale(), listClasses()]);
 
     return (
         <>
@@ -39,13 +41,16 @@ export default async function ExamsPage() {
                         <Link href="/admin/exams/results" className="btn-ghost min-h-10 text-[14px]">
                             <FileSpreadsheet className="size-4" aria-hidden="true" /> Tabulation
                         </Link>
-                        <DemoButton className="btn-primary min-h-10 text-[14px]">
-                            <Plus className="size-4" aria-hidden="true" /> New exam
-                        </DemoButton>
+                        <NewExamButton classes={classes.map(({ id, name }) => ({ id, name }))} demo={isDemo} />
                     </>
                 }
             />
 
+            {exams.length === 0 && (
+                <Card>
+                    <p className="py-6 text-center text-ink-soft">No exams in this session yet. Create one to start: set it up, open marks entry, lock, review, publish.</p>
+                </Card>
+            )}
             <div className="grid gap-4 lg:grid-cols-3">
                 {exams.map((e) => {
                     const step = EXAM_STATUSES.indexOf(e.status);
@@ -54,9 +59,7 @@ export default async function ExamsPage() {
                             <div className="flex items-start justify-between gap-3">
                                 <div>
                                     <h2 className="text-[17px] font-semibold text-ink">{e.name}</h2>
-                                    <p className="text-[13.5px] text-ink-soft">
-                                        {formatDate(e.startDate)} – {formatDate(e.endDate)}
-                                    </p>
+                                    <p className="text-[13.5px] text-ink-soft">{e.startDate ? `${formatDate(e.startDate)}${e.endDate ? ` – ${formatDate(e.endDate)}` : ""}` : "Dates not set"}</p>
                                 </div>
                                 <Badge tone={e.status === "PUBLISHED" ? "green" : e.status === "MARKS_OPEN" ? "blue" : "yellow"}>{LABEL[e.status]}</Badge>
                             </div>
@@ -72,21 +75,7 @@ export default async function ExamsPage() {
                                 <p className="mb-1.5 text-[13px] text-ink-soft">Marks entered</p>
                                 <Progress value={e.progress} tone={e.progress === 100 ? "brand" : "sky"} label={`${e.name} marks entered`} />
                             </div>
-                            <div className="mt-5 flex flex-wrap gap-2">
-                                {e.status === "MARKS_OPEN" && (
-                                    <DemoButton className="btn-ghost min-h-9 px-3.5 text-[13.5px]" title="Marks entry locked" message="Demo: marks entry would close so the principal can review the tabulation.">
-                                        Lock marks
-                                    </DemoButton>
-                                )}
-                                {e.status === "PUBLISHED" && user.role === "SUPER_ADMIN" && (
-                                    <DemoButton className="btn-ghost min-h-9 px-3.5 text-[13.5px]" title="Unpublish" message="Demo: only the Super Admin can unpublish; it is written to the audit log.">
-                                        Unpublish
-                                    </DemoButton>
-                                )}
-                                <Link href="/admin/exams/results" className="btn-ghost min-h-9 px-3.5 text-[13.5px]">
-                                    Tabulation
-                                </Link>
-                            </div>
+                            <ExamActions exam={{ id: e.id, name: e.name, status: e.status }} canManage canPublish={can(user, "results.publish")} isSuperAdmin={user.role === "SUPER_ADMIN"} demo={isDemo} />
                         </Card>
                     );
                 })}

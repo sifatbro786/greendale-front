@@ -29,7 +29,7 @@ export default async function StudentProfilePage({ params }) {
     if (user.role === "TEACHER" && !(await teacherSections(user.staffId)).some((x) => x.value === s.sectionId)) notFound();
 
     const canEdit = can(user, "students.manage");
-    // Results and fees go live in Step 4: until then those tabs are simply hidden in live mode.
+    // Fees tab only for fees.view holders.
     const [month, results, ledger, sections] = await Promise.all([
         studentAttendanceMonth(id, today().slice(0, 7)),
         unlessNotConnected(studentResults(id)),

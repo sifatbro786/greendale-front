@@ -10,7 +10,7 @@ export const instant = false;
 
 export default async function PaymentsPage() {
     await requirePermission("fees.view");
-    const rows = (await listPayments()).map((p) => ({ ...p, methodLabel: p.method === "BKASH" ? "bKash" : p.method === "CARD" ? "Card" : "Cash" }));
+    const rows = (await listPayments()).map((p) => ({ ...p, methodLabel: { BKASH: "bKash", CARD: "Card", BANK: "Bank", NAGAD: "Nagad", ROCKET: "Rocket" }[p.method] ?? "Cash" }));
     return (
         <>
             <PageHead title="Payments" description="Latest 400 receipts. Gap-free receipt numbers per year." crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Fees", href: "/admin/fees" }, { label: "Payments" }]} />
@@ -29,7 +29,7 @@ export default async function PaymentsPage() {
                     searchKeys={["receiptNo", "name", "tranId"]}
                     searchPlaceholder="Receipt, student or transaction"
                     filters={[
-                        { key: "methodLabel", label: "Method", options: ["Cash", "bKash", "Card"].map((m) => ({ value: m, label: m })) },
+                        { key: "methodLabel", label: "Method", options: ["Cash", "bKash", "Nagad", "Card", "Bank"].map((m) => ({ value: m, label: m })) },
                         { key: "status", label: "Status", options: [{ value: "VALID", label: "Valid" }, { value: "REVERSED", label: "Reversed" }] },
                     ]}
                     exportName="greendale-payments"

@@ -3,12 +3,12 @@ import Link from "next/link";
 
 import { Avatar, Badge, Card, StatCard } from "@/components/dash/ui";
 import { requireStudent } from "@/lib/auth/session";
-import { studentAttendanceMonth, TODAY } from "@/lib/dashboard/attendance";
+import { studentAttendanceMonth, today as todayFn } from "@/lib/dashboard/attendance";
 import { portalNotices } from "@/lib/dashboard/comms";
 import { studentResults, upcomingExams } from "@/lib/dashboard/exams";
 import { studentLedger } from "@/lib/dashboard/fees";
+import { getRoutine } from "@/lib/dashboard/routine";
 import { getStudent } from "@/lib/dashboard/students";
-import { db } from "@/lib/demo/dashboard/_shared";
 import { formatDate, formatMoney } from "@/lib/format";
 
 export const metadata = { title: "Home" };
@@ -19,12 +19,24 @@ export const instant = false;
 export default async function PortalHome() {
     const user = await requireStudent();
     const s = await getStudent(user.studentId);
-    const [month, results, ledger, notices, exams] = await Promise.all([studentAttendanceMonth(s.id, TODAY.slice(0, 7)), studentResults(s.id), studentLedger(s.id), portalNotices(s.id), upcomingExams()]);
+    const TODAY = todayFn(); // after the auth read (cache components)
+    const [month, results, ledger, notices, exams, routine] = await Promise.all([
+        studentAttendanceMonth(s.id, TODAY.slice(0, 7)),
+        studentResults(s.id),
+        studentLedger(s.id),
+        portalNotices(s.id),
+        upcomingExams(),
+        s.sectionId ? getRoutine({ sectionId: s.sectionId }) : null,
+    ]);
     const latest = results.at(-1);
     const rate = month.present + month.late + month.absent ? Math.round(((month.present + month.late) / (month.present + month.late + month.absent)) * 100) : 0;
     // Today's class routine for the student's section
     const day = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][new Date(`${TODAY}T00:00:00Z`).getUTCDay()];
-    const todaySlots = db.routineSlots.filter((r) => r.sectionId === s.sectionId && r.day === day).map((r) => ({ ...r, period: db.periods.find((p) => p.id === r.periodId), subject: db.subjects.find((x) => x.id === r.subjectId).name }));
+    const periods = new Map((routine?.periods ?? []).map((p) => [p.id, p]));
+    const todaySlots = (routine?.cells ?? [])
+        .filter((c) => c.day === day && periods.has(c.periodId))
+        .map((c) => ({ ...c, id: `${c.day}-${c.periodId}`, period: periods.get(c.periodId) }))
+        .sort((a, b) => a.period.number - b.period.number);
 
     return (
         <>
@@ -51,9 +63,9 @@ export default async function PortalHome() {
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard label="Attendance this month" value={`${rate}%`} hint={`${month.absent} absent · ${month.late} late`} icon="CalendarCheck" href="/portal/attendance" />
-                <StatCard label="Latest result" value={latest ? `GPA ${latest.gpa.toFixed(2)}` : "—"} hint={latest ? `${latest.exam.name} · ${latest.grade}` : "No published result"} icon="Award" tone="sun" href="/portal/results" />
+                <StatCard label="Latest result" value={latest ? (latest.gpa != null ? `GPA ${latest.gpa.toFixed(2)}` : "Published") : "—"} hint={latest ? `${latest.exam.name}${latest.grade ? ` · ${latest.grade}` : " · progress report"}` : "No published result"} icon="Award" tone="sun" href="/portal/results" />
                 <StatCard label="Current dues" value={formatMoney(ledger.totals.due)} hint={ledger.totals.due ? "Pay online or at the office" : "Nothing due"} icon="Wallet" tone={ledger.totals.due ? "coral" : "brand"} href="/portal/fees" />
-                <StatCard label="Next exam" value={exams[0] ? formatDate(exams[0].startDate, { day: "numeric", month: "short" }) : "—"} hint={exams[0]?.name} icon="ClipboardList" tone="sky" href="/portal/admit-card" />
+                <StatCard label="Next exam" value={exams[0]?.startDate ? formatDate(exams[0].startDate, { day: "numeric", month: "short" }) : exams[0] ? "Soon" : "—"} hint={exams[0]?.name} icon="ClipboardList" tone="sky" href="/portal/admit-card" />
             </div>
 
             <div className="mt-4 grid gap-4 lg:grid-cols-2">

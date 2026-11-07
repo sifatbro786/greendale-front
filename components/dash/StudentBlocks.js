@@ -74,12 +74,12 @@ export function ResultsTable({ results, hrefFor }) {
                             <td className="py-3 pr-4 text-right tabular-nums">
                                 {r.total}/{r.fullTotal}
                             </td>
-                            <td className="py-3 pr-4 text-right font-semibold tabular-nums">{r.gpa.toFixed(2)}</td>
+                            <td className="py-3 pr-4 text-right font-semibold tabular-nums">{r.gpa != null ? r.gpa.toFixed(2) : "—"}</td>
                             <td className="py-3 pr-4">
-                                <Badge tone={r.failed ? "red" : r.grade === "A+" ? "green" : "blue"}>{r.grade}</Badge>
+                                {r.grade ? <Badge tone={r.failed ? "red" : r.grade === "A+" ? "green" : "blue"}>{r.grade}</Badge> : <span className="text-ink-soft">Progress report</span>}
                             </td>
                             <td className="py-3 pr-4 text-right tabular-nums">
-                                {r.position} of {r.outOf}
+                                {r.position ? `${r.position} of ${r.outOf}` : "—"}
                             </td>
                             <td className="py-3 text-right">
                                 {hrefFor && (
@@ -142,7 +142,7 @@ export function PaymentList({ payments, receiptHref }) {
                             {p.receiptNo} {p.status === "REVERSED" && <Badge tone="red">Reversed</Badge>}
                         </span>
                         <span className="block text-[12.5px] text-ink-soft">
-                            {formatDate(p.paidAt)} · {p.method === "BKASH" ? "bKash" : p.method === "CARD" ? "Card" : "Cash"} · {p.heads.join(", ")}
+                            {formatDate(p.paidAt)} · {{ BKASH: "bKash", CARD: "Card", BANK: "Bank", NAGAD: "Nagad", ROCKET: "Rocket" }[p.method] ?? "Cash"} · {p.heads.join(", ") || "Advance"}
                         </span>
                     </span>
                     <span className="font-semibold text-ink tabular-nums">{formatMoney(p.amount)}</span>
