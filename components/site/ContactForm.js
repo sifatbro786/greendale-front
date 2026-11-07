@@ -3,6 +3,8 @@
 import { CheckCircle2, Loader2, Send } from "lucide-react";
 import { useState } from "react";
 
+import { api } from "@/lib/api/client";
+
 const field =
     "mt-1.5 block w-full rounded-xl border bg-white px-4 py-3 text-[16px] text-ink placeholder:text-ink/35 focus:border-brand focus:ring-4 focus:ring-brand/15 focus:outline-none";
 
@@ -14,22 +16,15 @@ export default function ContactForm() {
         const form = e.currentTarget;
         const data = Object.fromEntries(new FormData(form));
         setState({ status: "sending", message: "", fieldErrors: {} });
-        try {
-            const res = await fetch("/api/contact", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data),
-            });
-            const out = await res.json().catch(() => ({}));
-            if (res.ok && out.ok) {
-                form.reset();
-                setState({ status: "sent", message: "", fieldErrors: {} });
-            } else {
-                setState({ status: "error", message: out.message || "Something went wrong.", fieldErrors: out.fieldErrors || {} });
-            }
-        } catch {
-            setState({ status: "error", message: "Network problem. Please try again or call the office.", fieldErrors: {} });
+        const r = await api("/api/contact", { method: "POST", body: data });
+        if (r.ok) {
+            form.reset();
+            setState({ status: "sent", message: "", fieldErrors: {} });
+            return;
         }
+        const hasFields = Object.keys(r.fieldErrors).length > 0;
+        const message = r.status === 0 ? "Network problem. Please try again or call the office." : hasFields ? "Please check the highlighted fields." : r.error.message;
+        setState({ status: "error", message, fieldErrors: r.fieldErrors });
     }
 
     if (state.status === "sent") {

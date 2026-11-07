@@ -26,7 +26,7 @@ export default async function DashboardPage() {
 
     const [counts, att, trend, fees, exams, notices] = await Promise.all([studentCounts(), attendanceSummary(), attendanceTrend(14), feeSummary(), upcomingExams(), listStaffNotices()]);
     const first = user.name.split(" ")[0];
-    const canFees = can(user.role, "fees.view");
+    const canFees = can(user, "fees.view");
 
     return (
         <>
@@ -35,7 +35,7 @@ export default async function DashboardPage() {
                 description={`Here is Greendale today, ${formatDate(TODAY, { weekday: "long", day: "numeric", month: "long", year: "numeric" })}.`}
                 actions={
                     <>
-                        {can(user.role, "fees.collect") && (
+                        {can(user, "fees.collect") && (
                             <Link href="/admin/fees/collect" className="btn-primary min-h-10 text-[14px]">
                                 <HandCoins className="size-4" aria-hidden="true" /> Collect fee
                             </Link>

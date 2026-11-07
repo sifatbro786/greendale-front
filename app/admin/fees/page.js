@@ -30,12 +30,12 @@ export default async function FeesPage() {
                 crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Fees" }]}
                 actions={
                     <>
-                        {can(user.role, "sms.send") || can(user.role, "sms.dues") ? (
+                        {can(user, "sms.send") || can(user, "sms.dues") ? (
                             <DemoButton className="btn-ghost min-h-10 text-[14px]" title={`Due reminders to ${dues.length} guardians`} message="Demo: one SMS per guardian with the exact due amount, sent through the SMS queue.">
                                 <MessageSquareText className="size-4" aria-hidden="true" /> Send due reminders
                             </DemoButton>
                         ) : null}
-                        {can(user.role, "fees.collect") && (
+                        {can(user, "fees.collect") && (
                             <Link href="/admin/fees/collect" className="btn-primary min-h-10 text-[14px]">
                                 <HandCoins className="size-4" aria-hidden="true" /> Collect fee
                             </Link>

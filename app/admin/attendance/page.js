@@ -16,8 +16,8 @@ export const instant = false;
 
 export default async function AttendancePage() {
     const user = await requireStaff();
-    if (!can(user.role, "attendance.take")) {
-        if (can(user.role, "attendance.view")) redirect("/admin/attendance/reports");
+    if (!can(user, "attendance.take")) {
+        if (can(user, "attendance.view")) redirect("/admin/attendance/reports");
         redirect("/admin");
     }
     const sections = user.role === "TEACHER" ? await teacherSections(user.staffId) : await listSectionOptions();
@@ -32,7 +32,7 @@ export default async function AttendancePage() {
                 description="Takes under a minute: everyone starts present, tap only who is absent or late."
                 crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Attendance" }]}
                 actions={
-                    can(user.role, "attendance.view") && (
+                    can(user, "attendance.view") && (
                         <Link href="/admin/attendance/reports" className="btn-ghost min-h-10 text-[14px]">
                             Reports
                         </Link>

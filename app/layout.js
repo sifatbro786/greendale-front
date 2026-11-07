@@ -1,6 +1,7 @@
 import localFont from "next/font/local";
 
 import { school } from "@/config/school";
+import { isDemo } from "@/lib/mode";
 
 import "./globals.css";
 
@@ -58,6 +59,8 @@ export const metadata = {
     },
     twitter: { card: "summary_large_image" },
     alternates: { canonical: "/" },
+    // The Vercel demo duplicates the real school site: keep it out of search results.
+    ...(isDemo && { robots: { index: false, follow: false } }),
 };
 
 export const viewport = {

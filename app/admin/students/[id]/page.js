@@ -26,8 +26,8 @@ export default async function StudentProfilePage({ params }) {
     // "Own class" scope: a teacher asking for another student gets 404 (ids can't be probed).
     if (user.role === "TEACHER" && !(await teacherSections(user.staffId)).some((x) => x.value === s.sectionId)) notFound();
 
-    const [month, results, ledger] = await Promise.all([studentAttendanceMonth(id, TODAY.slice(0, 7)), studentResults(id), can(user.role, "fees.view") ? studentLedger(id) : null]);
-    const canEdit = can(user.role, "students.manage");
+    const [month, results, ledger] = await Promise.all([studentAttendanceMonth(id, TODAY.slice(0, 7)), studentResults(id), can(user, "fees.view") ? studentLedger(id) : null]);
+    const canEdit = can(user, "students.manage");
 
     const tabs = [
         { id: "overview", label: "Overview" },

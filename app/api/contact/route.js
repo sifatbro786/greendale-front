@@ -1,60 +1,51 @@
 /**
- * POST /api/contact — Phase 1 contact form (PRD §3.1).
- * zod validation, honeypot, same-origin + JSON content-type check, 5 requests / 10 min / IP, Nodemailer.
- * Phase 2: this handler is deleted and Express serves the same URL (Nginx routes /api → :4000),
- * storing a ContactMessage and sending the email through the BullMQ email queue.
+ * POST /api/contact — DEMO contact form (DATA_MODE=demo, Vercel): sends the email directly with Nodemailer.
+ * Live mode: /api/* goes to Express (next.config rewrite locally, Nginx on the VPS), which stores a
+ * ContactMessage and emails through the queue. Same request and envelope in both modes:
+ *   200 { data: { sent: true } } · 400 BAD_REQUEST (details) · 413 · 415 · 429 · 502/503
  */
 import { school } from "@/config/school";
 import { contactSchema } from "@/lib/server/contact-schema";
+import { fail, guardJsonPost, issues, ok } from "@/lib/server/envelope";
 import { escapeHtml, getTransporter } from "@/lib/server/mailer";
 import { clientIp, rateLimit } from "@/lib/server/rate-limit";
 
 const MAX_BODY = 10_000;
-const json = (body, status = 200, headers = {}) => Response.json(body, { status, headers: { "Cache-Control": "no-store", ...headers } });
 
 export async function POST(request) {
     // CSRF hardening: JSON only, and the Origin (when sent) must match this host.
-    if (!request.headers.get("content-type")?.includes("application/json")) {
-        return json({ ok: false, message: "Unsupported content type." }, 415);
-    }
-    const origin = request.headers.get("origin");
-    if (origin && new URL(origin).host !== request.headers.get("host")) {
-        return json({ ok: false, message: "Forbidden." }, 403);
-    }
+    const stop = guardJsonPost(request);
+    if (stop) return stop;
 
     const ip = clientIp(request.headers);
     const rl = rateLimit(`contact:${ip}`, { limit: 5, windowMs: 10 * 60 * 1000 });
     if (!rl.ok) {
-        return json({ ok: false, message: "Too many messages. Please try again in a few minutes, or call the office." }, 429, {
+        return fail(429, "TOO_MANY_REQUESTS", "Too many messages. Please try again in a few minutes, or call the office.", undefined, {
             "Retry-After": String(rl.retryAfter),
         });
     }
 
     const raw = await request.text();
-    if (raw.length > MAX_BODY) return json({ ok: false, message: "Message is too long." }, 413);
+    if (raw.length > MAX_BODY) return fail(413, "PAYLOAD_TOO_LARGE", "Message is too long.");
 
     let body;
     try {
         body = JSON.parse(raw);
     } catch {
-        return json({ ok: false, message: "Invalid request." }, 400);
+        return fail(400, "BAD_REQUEST", "Malformed JSON body");
     }
 
+    // Honeypot hit: pretend success so bots learn nothing.
+    if (body?.website) return ok({ sent: true });
     const parsed = contactSchema.safeParse(body);
-    if (!parsed.success) {
-        const fieldErrors = {};
-        for (const issue of parsed.error.issues) fieldErrors[issue.path[0]] ??= issue.message;
-        // Honeypot hit: pretend success so bots learn nothing.
-        if (fieldErrors.website) return json({ ok: true });
-        return json({ ok: false, message: "Please check the highlighted fields.", fieldErrors }, 422);
-    }
+    if (!parsed.success) return fail(400, "BAD_REQUEST", "Invalid request", issues(parsed.error));
 
     const d = parsed.data;
     const transporter = getTransporter();
     const to = process.env.CONTACT_TO || school.contact.email;
     if (!transporter || !to) {
         console.error("[contact] SMTP or CONTACT_TO not configured");
-        return json({ ok: false, message: `Our message service is not ready yet. Please call ${school.contact.phone}.` }, 503);
+        return fail(503, "SERVICE_UNAVAILABLE", `Our message service is not ready yet. Please call ${school.contact.phone}.`);
     }
 
     const rows = [
@@ -77,8 +68,8 @@ export async function POST(request) {
         });
     } catch (err) {
         console.error("[contact] sendMail failed", err?.message);
-        return json({ ok: false, message: `We could not send your message. Please call ${school.contact.phone}.` }, 502);
+        return fail(502, "BAD_GATEWAY", `We could not send your message. Please call ${school.contact.phone}.`);
     }
 
-    return json({ ok: true });
+    return ok({ sent: true });
 }

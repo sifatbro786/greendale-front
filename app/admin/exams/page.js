@@ -19,8 +19,8 @@ const LABEL = { DRAFT: "Draft", MARKS_OPEN: "Marks open", LOCKED: "Locked", PUBL
 
 export default async function ExamsPage() {
     const user = await requireStaff();
-    if (!can(user.role, "exams.manage")) {
-        if (can(user.role, "marks.enter")) redirect("/admin/exams/marks");
+    if (!can(user, "exams.manage")) {
+        if (can(user, "marks.enter")) redirect("/admin/exams/marks");
         redirect("/admin");
     }
     const [exams, scale] = await Promise.all([listExams(), getGradeScale()]);

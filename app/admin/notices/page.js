@@ -21,7 +21,7 @@ export default async function NoticesPage() {
                 title="Notices"
                 description="Internal notices for staff, guardians or one class. Website notices are managed under Website."
                 crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Notices" }]}
-                actions={can(user.role, "notices.manage") && <NoticeComposer audiences={[{ value: "ALL", label: "Everyone (staff + guardians)" }, { value: "STAFF", label: "Staff only" }, ...sections.map((s) => ({ value: `CLASS:${s.classId}`, label: `Guardians of ${s.label}` }))]} />}
+                actions={can(user, "notices.manage") && <NoticeComposer audiences={[{ value: "ALL", label: "Everyone (staff + guardians)" }, { value: "STAFF", label: "Staff only" }, ...sections.map((s) => ({ value: `CLASS:${s.classId}`, label: `Guardians of ${s.label}` }))]} />}
             />
             <div className="grid gap-3">
                 {notices.map((n) => (

@@ -6,14 +6,16 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
+import { api } from "@/lib/api/client";
+
 import { Icon } from "./icons";
 import { ToastProvider } from "./Toast";
 
 /**
  * App shell for /admin and /portal: sidebar (drawer on phones), top bar, demo banner, toasts.
- * @param {{ user: { name: string, roleLabel: string, subtitle?: string }, nav: { label: string, items: { label: string, href: string, icon: string, exact?: boolean }[] }[], area: "admin"|"portal", logo: { src: string, width: number, height: number }, children: React.ReactNode }} props
+ * @param {{ demo?: boolean, user: { name: string, roleLabel: string, subtitle?: string }, nav: { label: string, items: { label: string, href: string, icon: string, exact?: boolean }[] }[], area: "admin"|"portal", logo: { src: string, width: number, height: number }, children: React.ReactNode }} props
  */
-export default function DashShell({ user, nav, area, logo, children }) {
+export default function DashShell({ demo = false, user, nav, area, logo, children }) {
     const pathname = usePathname();
     const [open, setOpen] = useState(false);
 
@@ -88,9 +90,11 @@ export default function DashShell({ user, nav, area, logo, children }) {
                 </div>
 
                 <div className="lg:pl-64 print:!pl-0">
-                    <div className="bg-sun px-4 py-1.5 text-center text-[12.5px] font-medium text-ink print:hidden">
-                        Demo mode · sample data · changes are not saved
-                    </div>
+                    {demo && (
+                        <div className="bg-sun px-4 py-1.5 text-center text-[12.5px] font-medium text-ink print:hidden">
+                            Demo mode · sample data · changes are not saved
+                        </div>
+                    )}
                     <header className="sticky top-0 z-20 border-b border-line bg-white/90 backdrop-blur print:hidden">
                         <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
                             <button type="button" onClick={() => setOpen(true)} className="grid size-10 place-items-center rounded-xl border border-line lg:hidden" aria-label="Open menu">
@@ -129,7 +133,7 @@ function UserMenu({ user }) {
 
     async function logout() {
         setBusy(true);
-        await fetch("/api/auth/logout", { method: "POST" }).catch(() => {});
+        await api("/api/auth/logout", { method: "POST" });
         // Full page load: drops every cached route/state from the signed-in session.
         window.location.replace("/login");
     }

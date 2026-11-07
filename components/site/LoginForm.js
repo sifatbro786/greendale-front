@@ -3,14 +3,19 @@
 import { Eye, EyeOff, Loader2, LogIn } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { api } from "@/lib/api/client";
+
 const DEMO = [
     { label: "Principal / Admin", identifier: "admin@greendale.demo", password: "12345678" },
     { label: "Teacher", identifier: "teacher@greendale.demo", password: "12345678" },
     { label: "Student / Guardian", identifier: "GEVS-26109", password: "12345678" },
 ];
 
-/** One login for staff and guardians; the API decides where each role lands. */
-export default function LoginForm() {
+/**
+ * One login for staff and guardians; the API decides where each role lands.
+ * @param {{ showDemo?: boolean }} props  demo accounts box (demo mode only, never on the live site)
+ */
+export default function LoginForm({ showDemo = false }) {
     const [identifier, setIdentifier] = useState("");
     const [password, setPassword] = useState("");
     const [show, setShow] = useState(false);
@@ -27,22 +32,14 @@ export default function LoginForm() {
         e.preventDefault();
         setState({ busy: true, error: "", fieldErrors: {} });
         const next = new URLSearchParams(window.location.search).get("next") ?? undefined;
-        try {
-            const res = await fetch("/api/auth/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ identifier, password, next }),
-            });
-            const out = await res.json().catch(() => ({}));
-            if (!res.ok || !out.ok) {
-                setState({ busy: false, error: out.message || "Could not sign in.", fieldErrors: out.fieldErrors || {} });
-                return;
-            }
-            // Full navigation so the new httpOnly session cookie is used for the very first dashboard request.
-            window.location.assign(out.redirectTo);
-        } catch {
-            setState({ busy: false, error: "Network problem. Please try again.", fieldErrors: {} });
+        const r = await api("/api/auth/login", { method: "POST", body: { identifier, password, next } });
+        if (!r.ok) {
+            const hasFields = Object.keys(r.fieldErrors).length > 0;
+            setState({ busy: false, error: hasFields ? "Please check the highlighted fields." : r.error.message, fieldErrors: r.fieldErrors });
+            return;
         }
+        // Full navigation so the new httpOnly cookies are used for the very first dashboard request.
+        window.location.assign(r.data.redirectTo);
     }
 
     const input = "mt-1.5 block w-full rounded-xl border bg-white px-4 py-3 text-[16px] text-ink outline-none focus:border-brand focus:ring-4 focus:ring-brand/15";
@@ -91,31 +88,33 @@ export default function LoginForm() {
                 <p className="text-center text-[13.5px] text-ink-soft">Forgot your password? The school office can reset it for you.</p>
             </form>
 
-            <div className="mt-8 rounded-2xl border border-dashed border-brand/40 bg-brand-soft/50 p-4">
-                <p className="text-[13px] font-semibold tracking-wide text-brand-deep uppercase">Demo accounts</p>
-                <ul className="mt-2.5 space-y-2">
-                    {DEMO.map((d) => (
-                        <li key={d.label} className="flex items-center justify-between gap-3 text-[13.5px]">
-                            <span>
-                                <span className="block font-medium text-ink">{d.label}</span>
-                                <span className="text-ink-soft">
-                                    {d.identifier} · {d.password}
+            {showDemo && (
+                <div className="mt-8 rounded-2xl border border-dashed border-brand/40 bg-brand-soft/50 p-4">
+                    <p className="text-[13px] font-semibold tracking-wide text-brand-deep uppercase">Demo accounts</p>
+                    <ul className="mt-2.5 space-y-2">
+                        {DEMO.map((d) => (
+                            <li key={d.label} className="flex items-center justify-between gap-3 text-[13.5px]">
+                                <span>
+                                    <span className="block font-medium text-ink">{d.label}</span>
+                                    <span className="text-ink-soft">
+                                        {d.identifier} · {d.password}
+                                    </span>
                                 </span>
-                            </span>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setIdentifier(d.identifier);
-                                    setPassword(d.password);
-                                }}
-                                className="shrink-0 rounded-full border border-brand/40 bg-white px-3 py-1.5 text-[13px] font-semibold text-brand-deep hover:bg-brand hover:text-white"
-                            >
-                                Use
-                            </button>
-                        </li>
-                    ))}
-                </ul>
-            </div>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setIdentifier(d.identifier);
+                                        setPassword(d.password);
+                                    }}
+                                    className="shrink-0 rounded-full border border-brand/40 bg-white px-3 py-1.5 text-[13px] font-semibold text-brand-deep hover:bg-brand hover:text-white"
+                                >
+                                    Use
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )}
         </div>
     );
 }

@@ -3,6 +3,7 @@ import { ShieldCheck } from "lucide-react";
 import LoginForm from "@/components/site/LoginForm";
 import Photo from "@/components/ui/Photo";
 import { img } from "@/content/media";
+import { isDemo } from "@/lib/mode";
 
 export const metadata = {
     title: "Portal Login",
@@ -29,7 +30,7 @@ export default function LoginPage() {
                     </span>
                     <h1 className="mt-5 text-3xl font-semibold text-ink">Sign in</h1>
                     <p className="mt-1.5 mb-8 text-ink-soft">For guardians, students, teachers and school staff.</p>
-                    <LoginForm />
+                    <LoginForm showDemo={isDemo} />
                 </div>
             </div>
         </section>

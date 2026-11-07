@@ -28,7 +28,7 @@ export default async function ResultsPage() {
         <>
             <PageHead title="Tabulation & results" description="Totals, GPA and position are calculated from the grade scale. Publishing freezes the result." crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Exams", href: "/admin/exams" }, { label: "Results" }]} />
             <Card padded={false}>
-                <Tabulation exams={exams.map(({ id, name, status }) => ({ id, name, status }))} sections={sections.map(({ value, label }) => ({ value, label }))} data={data} canPublish={can(user.role, "results.publish")} />
+                <Tabulation exams={exams.map(({ id, name, status }) => ({ id, name, status }))} sections={sections.map(({ value, label }) => ({ value, label }))} data={data} canPublish={can(user, "results.publish")} />
             </Card>
         </>
     );

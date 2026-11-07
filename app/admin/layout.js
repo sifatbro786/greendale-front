@@ -27,7 +27,7 @@ export default function AdminLayout({ children }) {
 async function AdminFrame({ children }) {
     const user = await requireStaff();
     return (
-        <Frame user={user} nav={staffNav(user.role)} area="admin">
+        <Frame user={user} nav={staffNav(user)} area="admin">
             {children}
         </Frame>
     );

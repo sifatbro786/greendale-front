@@ -13,10 +13,10 @@ export const instant = false;
 
 export default async function SmsPage() {
     const user = await requireStaff();
-    if (!can(user.role, "sms.send") && !can(user.role, "sms.dues")) redirect("/admin");
+    if (!can(user, "sms.send") && !can(user, "sms.dues")) redirect("/admin");
     const data = await smsOverview();
-    const audiences = can(user.role, "sms.send") ? data.audiences : data.audiences.filter((a) => a.value === "dues");
-    const templates = can(user.role, "sms.send") ? data.templates : data.templates.filter((t) => t.type === "FEE_DUE");
+    const audiences = can(user, "sms.send") ? data.audiences : data.audiences.filter((a) => a.value === "dues");
+    const templates = can(user, "sms.send") ? data.templates : data.templates.filter((t) => t.type === "FEE_DUE");
     const delivered = data.logs.filter((l) => l.status === "DELIVERED").length;
     return (
         <>

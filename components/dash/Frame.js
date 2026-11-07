@@ -1,16 +1,19 @@
 import { school } from "@/config/school";
 import { ROLE_LABEL } from "@/lib/auth/permissions";
+import { isDemo } from "@/lib/mode";
 
 import DashShell from "./DashShell";
 
 /** Server wrapper: turns the session user into serialisable props for the client shell. */
 export default function Frame({ user, nav, area, children }) {
+    const roleLabel = user.roleName ?? ROLE_LABEL[user.role] ?? user.role;
     return (
         <DashShell
             area={area}
+            demo={isDemo}
             nav={nav}
             logo={{ src: school.logo.crest, width: school.logo.width, height: school.logo.height }}
-            user={{ name: user.name, roleLabel: ROLE_LABEL[user.role], subtitle: user.title ? `${user.title} · ${ROLE_LABEL[user.role]}` : user.identifier }}
+            user={{ name: user.name, roleLabel, subtitle: user.title ? `${user.title} · ${roleLabel}` : user.identifier }}
         >
             {children}
         </DashShell>

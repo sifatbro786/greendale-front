@@ -32,7 +32,7 @@ export default async function RoutinePage() {
                 title={teacher ? "My routine" : "Class routine"}
                 description={teacher ? "Your weekly classes, built automatically from the class routines." : "Class routines; teacher routines are generated from them."}
                 crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Routine" }]}
-                actions={can(user.role, "routine.manage") && <DemoButton className="btn-primary min-h-10 text-[14px]">Edit routine</DemoButton>}
+                actions={can(user, "routine.manage") && <DemoButton className="btn-primary min-h-10 text-[14px]">Edit routine</DemoButton>}
             />
             <Card padded={false}>
                 <RoutineGrid options={options} routines={routines} showTeacher={!teacher} />

@@ -26,7 +26,7 @@ export default async function ReceiptPage({ params }) {
                     crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Payments", href: "/admin/fees/payments" }, { label: data.payment.receiptNo }]}
                     actions={
                         <>
-                            {can(user.role, "fees.manage") && data.payment.status === "VALID" && (
+                            {can(user, "fees.manage") && data.payment.status === "VALID" && (
                                 <DemoButton className="btn-ghost min-h-10 text-[14px]" title="Reverse payment" message="Demo: a reversal entry with a reason would be created and logged. The original receipt is kept.">
                                     Reverse
                                 </DemoButton>

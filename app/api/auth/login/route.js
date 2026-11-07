@@ -1,13 +1,15 @@
 /**
- * POST /api/auth/login — DEMO login. Contract kept for Phase 2 (Express /api/auth/login):
- *   body { identifier, password } → 200 { ok, user: { id, name, role }, redirectTo } + httpOnly session cookie
- *   401 wrong credentials · 422 validation · 429 rate limited
+ * POST /api/auth/login — DEMO login (DATA_MODE=demo). In live mode next.config rewrites /api/* to Express
+ * (and Nginx does the same on the VPS), so this file never runs there. Same contract as Express:
+ *   body { identifier, password, next? } → 200 { data: { user: { id, name, role }, redirectTo } } + httpOnly cookie
+ *   400 BAD_REQUEST (details) · 401 INVALID_CREDENTIALS · 415 · 429 TOO_MANY_REQUESTS
  */
 import { z } from "zod";
 
 import { verifyCredentials } from "@/lib/auth/demo-users";
 import { homeFor } from "@/lib/auth/permissions";
 import { SESSION_COOKIE, SESSION_TTL_SECONDS, signSession } from "@/lib/auth/session-token";
+import { fail, guardJsonPost, issues, ok } from "@/lib/server/envelope";
 import { clientIp, rateLimit } from "@/lib/server/rate-limit";
 
 const schema = z.object({
@@ -15,8 +17,6 @@ const schema = z.object({
     password: z.string().min(1, "Enter your password.").max(200),
     next: z.string().max(200).optional(),
 });
-
-const json = (body, status = 200, headers = {}) => Response.json(body, { status, headers: { "Cache-Control": "no-store", ...headers } });
 
 /** Only allow same-site relative paths in ?next= (no open redirects). */
 function safeNext(next, role) {
@@ -27,25 +27,20 @@ function safeNext(next, role) {
 }
 
 export async function POST(request) {
-    if (!request.headers.get("content-type")?.includes("application/json")) return json({ ok: false, message: "Unsupported content type." }, 415);
-    const origin = request.headers.get("origin");
-    if (origin && new URL(origin).host !== request.headers.get("host")) return json({ ok: false, message: "Forbidden." }, 403);
+    const stop = guardJsonPost(request);
+    if (stop) return stop;
 
     const rl = rateLimit(`login:${clientIp(request.headers)}`, { limit: 5, windowMs: 60 * 1000 });
-    if (!rl.ok) return json({ ok: false, message: "Too many attempts. Please wait a minute and try again." }, 429, { "Retry-After": String(rl.retryAfter) });
+    if (!rl.ok) return fail(429, "TOO_MANY_REQUESTS", "Too many attempts. Please wait a minute and try again.", undefined, { "Retry-After": String(rl.retryAfter) });
 
     const parsed = schema.safeParse(await request.json().catch(() => ({})));
-    if (!parsed.success) {
-        const fieldErrors = {};
-        for (const i of parsed.error.issues) fieldErrors[i.path[0]] ??= i.message;
-        return json({ ok: false, message: "Please check the highlighted fields.", fieldErrors }, 422);
-    }
+    if (!parsed.success) return fail(400, "BAD_REQUEST", "Invalid request", issues(parsed.error));
 
     const user = verifyCredentials(parsed.data.identifier, parsed.data.password);
-    if (!user) return json({ ok: false, message: "Wrong email / student ID or password." }, 401);
+    if (!user) return fail(401, "INVALID_CREDENTIALS", "Wrong email / student ID or password.");
 
     const token = await signSession({ sub: user.id, role: user.role, name: user.name });
-    const res = json({ ok: true, user: { id: user.id, name: user.name, role: user.role }, redirectTo: safeNext(parsed.data.next, user.role) });
+    const res = ok({ user: { id: user.id, name: user.name, role: user.role }, redirectTo: safeNext(parsed.data.next, user.role) });
     res.headers.append(
         "Set-Cookie",
         `${SESSION_COOKIE}=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${SESSION_TTL_SECONDS}${process.env.NODE_ENV === "production" ? "; Secure" : ""}`,

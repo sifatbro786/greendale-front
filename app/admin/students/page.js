@@ -17,7 +17,7 @@ export default async function StudentsPage() {
     const scope = teacher ? (await teacherSections(user.staffId)).map((s) => s.value) : undefined;
     const [rows, sections] = await Promise.all([listStudents({ sectionIds: scope }), listSectionOptions()]);
     const sectionOpts = sections.filter((s) => !scope || scope.includes(s.value));
-    const showDues = can(user.role, "fees.view");
+    const showDues = can(user, "fees.view");
 
     const columns = [
         { key: "name", label: "Student", type: "person", sub: "studentUid", href: "/admin/students/{id}" },
@@ -35,7 +35,7 @@ export default async function StudentsPage() {
                 title={teacher ? "My classes" : "Students"}
                 description={teacher ? "Students in the sections you teach. Guardian numbers are for school use only." : `${rows.length} students in session 2026. Each student keeps one profile for life; class and roll are stored per year.`}
                 crumbs={[{ label: "Dashboard", href: "/admin" }, { label: teacher ? "My classes" : "Students" }]}
-                actions={can(user.role, "students.manage") ? <StudentActions sections={sections} /> : null}
+                actions={can(user, "students.manage") ? <StudentActions sections={sections} /> : null}
             />
             <Card padded={false}>
                 <DataTable
