@@ -1,10 +1,12 @@
-import { Plus } from "lucide-react";
+import Link from "next/link";
 
+import AddClassButton from "@/components/dash/academics/AddClassButton";
+import SessionsCard from "@/components/dash/academics/SessionsCard";
 import DemoButton from "@/components/dash/DemoButton";
 import { Badge, Card, PageHead } from "@/components/dash/ui";
 import { requirePermission } from "@/lib/auth/session";
 import { listClasses, listSessions } from "@/lib/dashboard/academics";
-import { formatDate } from "@/lib/format";
+import { isDemo } from "@/lib/mode";
 
 export const metadata = { title: "Classes & subjects" };
 
@@ -22,33 +24,29 @@ export default async function AcademicsPage() {
                 crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Classes & subjects" }]}
                 actions={
                     <>
-                        <DemoButton className="btn-ghost min-h-10 text-[14px]" title="Promotion preview" message="Demo: pick a class, map it to the next class and preview new rolls (by result position or kept) before confirming. Runs in one transaction.">
-                            Promote students
-                        </DemoButton>
-                        <DemoButton className="btn-primary min-h-10 text-[14px]">
-                            <Plus className="size-4" aria-hidden="true" /> Add class
-                        </DemoButton>
+                        {isDemo && (
+                            <DemoButton
+                                className="btn-ghost min-h-10 text-[14px]"
+                                title="Promotion preview"
+                                message="Demo: pick a class, map it to the next class and preview new rolls (by result position or kept) before confirming. Runs in one transaction."
+                            >
+                                Promote students
+                            </DemoButton>
+                        )}
+                        <AddClassButton demo={isDemo} />
                     </>
                 }
             />
-            <Card title="Academic sessions" padded={false} className="mb-4">
-                <ul className="divide-y divide-line">
-                    {sessions.map((s) => (
-                        <li key={s.id} className="flex flex-wrap items-center gap-3 px-5 py-3.5">
-                            <span className="font-semibold text-ink">Session {s.name}</span>
-                            <span className="text-[14px] text-ink-soft">
-                                {formatDate(s.startDate)} – {formatDate(s.endDate)}
-                            </span>
-                            {s.isCurrent ? <Badge tone="green">Current</Badge> : <Badge>Closed</Badge>}
-                        </li>
-                    ))}
-                </ul>
-            </Card>
+            <SessionsCard sessions={sessions} demo={isDemo} />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 {classes.map((c) => (
-                    <Card key={c.id}>
+                    <Card key={c.id} className="group relative">
                         <div className="flex items-start justify-between gap-2">
-                            <h2 className="text-lg font-semibold text-ink">{c.name}</h2>
+                            <h2 className="text-lg font-semibold text-ink">
+                                <Link href={`/admin/academics/${c.id}`} className="after:absolute after:inset-0 group-hover:text-brand-deep">
+                                    {c.name}
+                                </Link>
+                            </h2>
                             <Badge tone={c.gradingMode === "MARKS" ? "blue" : "yellow"}>{c.gradingMode === "MARKS" ? "Marks & GPA" : "Remarks"}</Badge>
                         </div>
                         {c.sections.map((s) => (

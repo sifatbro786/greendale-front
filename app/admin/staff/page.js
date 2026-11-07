@@ -1,6 +1,6 @@
-import { UserPlus } from "lucide-react";
+import { Globe, UserPlus } from "lucide-react";
+import Link from "next/link";
 
-import DemoButton from "@/components/dash/DemoButton";
 import { Avatar, Card, PageHead } from "@/components/dash/ui";
 import { requirePermission } from "@/lib/auth/session";
 import { listStaff } from "@/lib/dashboard/academics";
@@ -20,24 +20,25 @@ export default async function StaffPage() {
                 description="Subject assignments decide what each teacher can see and enter. Turn on 'Show on website' to list a teacher on the public site."
                 crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Teachers & staff" }]}
                 actions={
-                    <DemoButton className="btn-primary min-h-10 text-[14px]">
+                    <Link href="/admin/staff/new" className="btn-primary min-h-10 text-[14px]">
                         <UserPlus className="size-4" aria-hidden="true" /> Add staff
-                    </DemoButton>
+                    </Link>
                 }
             />
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {staff.map((t) => (
-                    <Card key={t.id}>
+                    <Card key={t.id} className="group relative">
                         <div className="flex items-center gap-3.5">
                             <Avatar name={t.name} tone="soft" />
-                            <div className="min-w-0">
-                                <p className="font-semibold text-ink">{t.name}</p>
+                            <div className="min-w-0 flex-1">
+                                <Link href={`/admin/staff/${t.id}`} className="font-semibold text-ink after:absolute after:inset-0 group-hover:text-brand-deep">
+                                    {t.name}
+                                </Link>
                                 <p className="text-[13.5px] text-ink-soft">{t.designation}</p>
                             </div>
+                            {t.showOnWebsite && <Globe className="size-4 shrink-0 text-brand" aria-label="Shown on the website" />}
                         </div>
-                        <p className="mt-3 text-[13.5px] text-ink-soft">
-                            {t.qualification} · {t.phone}
-                        </p>
+                        <p className="mt-3 text-[13.5px] text-ink-soft">{[t.qualification, t.phone].filter(Boolean).join(" · ")}</p>
                         {t.classTeacherOf.length > 0 && <p className="mt-2 text-[13.5px] text-ink">Class teacher: {t.classTeacherOf.join(", ")}</p>}
                         <ul className="mt-3 flex flex-wrap gap-1.5">
                             {t.subjects.slice(0, 6).map((s) => (

@@ -13,9 +13,9 @@ import TempPassword from "./TempPassword";
 
 /**
  * Create or edit a staff account. POST /api/users · PATCH /api/users/:id
- * @param {{ mode: "create" | "edit", user?: any, roles: { id: string, label: string, role: string }[], demo?: boolean, isSelf?: boolean }} props
+ * @param {{ mode: "create" | "edit", user?: any, roles: { id: string, label: string, role: string }[], staffOptions?: { id: string, name: string, designation: string, email?: string, phone?: string }[], demo?: boolean, isSelf?: boolean }} props
  */
-export default function UserForm({ mode, user, roles, demo = false, isSelf = false }) {
+export default function UserForm({ mode, user, roles, staffOptions = [], demo = false, isSelf = false }) {
     const router = useRouter();
     const toast = useToast();
     const [v, setV] = useState({
@@ -24,6 +24,7 @@ export default function UserForm({ mode, user, roles, demo = false, isSelf = fal
         phone: user?.phone ?? "",
         roleId: user?.roleId ?? roles.find((r) => r.role === "TEACHER")?.id ?? roles[0]?.id ?? "",
         password: "",
+        staffId: "",
     });
     const [state, setState] = useState({ busy: false, error: "", fieldErrors: {} });
     const [created, setCreated] = useState(null);
@@ -36,7 +37,7 @@ export default function UserForm({ mode, user, roles, demo = false, isSelf = fal
         setState({ busy: true, error: "", fieldErrors: {} });
         const body =
             mode === "create"
-                ? { name: v.name, email: v.email, phone: v.phone, roleId: v.roleId, password: v.password }
+                ? { name: v.name, email: v.email, phone: v.phone, roleId: v.roleId, password: v.password, staffId: v.staffId || null }
                 : { name: v.name, email: v.email, phone: v.phone, ...(!isSelf && { roleId: v.roleId }) };
         const r = await api(mode === "create" ? "/api/users" : `/api/users/${user.id}`, { method: mode === "create" ? "POST" : "PATCH", body });
         if (!r.ok) {
@@ -74,6 +75,27 @@ export default function UserForm({ mode, user, roles, demo = false, isSelf = fal
 
     return (
         <form onSubmit={submit} noValidate className="grid gap-4 sm:grid-cols-2">
+            {mode === "create" && staffOptions.length > 0 && (
+                <label className="sm:col-span-2">
+                    <span className={label}>Staff record</span>
+                    <select
+                        value={v.staffId}
+                        onChange={(e) => {
+                            const st = staffOptions.find((x) => x.id === e.target.value);
+                            setV((s) => ({ ...s, staffId: e.target.value, ...(st && { name: st.name, email: st.email ?? s.email, phone: st.phone ?? s.phone }) }));
+                        }}
+                        className={`${field} border-line`}
+                    >
+                        <option value="">Not a teacher / no staff record</option>
+                        {staffOptions.map((st) => (
+                            <option key={st.id} value={st.id}>
+                                {st.name} · {st.designation}
+                            </option>
+                        ))}
+                    </select>
+                    <span className={hint}>Link a teacher&apos;s staff record so they see their own classes and subjects.</span>
+                </label>
+            )}
             <label className="sm:col-span-2">
                 <span className={label}>Full name *</span>
                 <input value={v.name} onChange={set("name")} autoComplete="off" className={`${field} ${fieldBorder(fe.name)}`} aria-invalid={!!fe.name} />
@@ -86,7 +108,16 @@ export default function UserForm({ mode, user, roles, demo = false, isSelf = fal
             </label>
             <label>
                 <span className={label}>Mobile</span>
-                <input type="tel" value={v.phone} onChange={set("phone")} autoComplete="off" inputMode="tel" placeholder="01XXXXXXXXX" className={`${field} ${fieldBorder(fe.phone)}`} aria-invalid={!!fe.phone} />
+                <input
+                    type="tel"
+                    value={v.phone}
+                    onChange={set("phone")}
+                    autoComplete="off"
+                    inputMode="tel"
+                    placeholder="01XXXXXXXXX"
+                    className={`${field} ${fieldBorder(fe.phone)}`}
+                    aria-invalid={!!fe.phone}
+                />
                 {fe.phone && <span className={errorText}>{fe.phone}</span>}
             </label>
             <label>
@@ -114,7 +145,13 @@ export default function UserForm({ mode, user, roles, demo = false, isSelf = fal
             )}
             <div className="sm:col-span-2">
                 <button type="submit" disabled={state.busy} className="btn-primary min-h-11 text-[14.5px] disabled:opacity-60">
-                    {state.busy ? <Loader2 className="size-4 animate-spin" aria-hidden="true" /> : mode === "create" ? <UserPlus className="size-4" aria-hidden="true" /> : <Save className="size-4" aria-hidden="true" />}
+                    {state.busy ? (
+                        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+                    ) : mode === "create" ? (
+                        <UserPlus className="size-4" aria-hidden="true" />
+                    ) : (
+                        <Save className="size-4" aria-hidden="true" />
+                    )}
                     {mode === "create" ? "Add user" : "Save changes"}
                 </button>
             </div>
