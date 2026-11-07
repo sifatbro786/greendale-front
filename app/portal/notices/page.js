@@ -11,29 +11,68 @@ export const metadata = { title: "Notices" };
 export const instant = false;
 
 export default async function PortalNotices() {
-    const user = await requireStudent();
-    const notices = await portalNotices(user.studentId);
-    return (
-        <>
-            <PageHead title="Notices" description="School notices, notices for your class and website announcements." />
-            <div className="grid gap-3">
-                {notices.map((n) => (
-                    <Card key={n.id}>
-                        <div className="flex flex-wrap items-center gap-2">
-                            {n.pinned && <Badge tone="yellow">Pinned</Badge>}
-                            <Badge tone={n.scope === "Your class" ? "yellow" : n.scope === "Website" ? "gray" : "blue"}>{n.scope}</Badge>
-                            <span className="text-[13px] text-ink-soft">{formatDate(n.publishedAt, { day: "numeric", month: "long", year: "numeric" })}</span>
-                        </div>
-                        <h2 className="mt-2 text-[17px] font-semibold text-ink">{n.title}</h2>
-                        <p className="mt-1 text-[15px] text-ink-soft">{n.body}</p>
-                        {n.slug && (
-                            <Link href={`/notices/${n.slug}`} className="mt-2 inline-block text-[13.5px] font-semibold text-brand-deep">
-                                Open on website →
-                            </Link>
-                        )}
-                    </Card>
-                ))}
+  const user = await requireStudent();
+  const notices = await portalNotices(user.studentId);
+  return (
+    <>
+      <PageHead
+        title="Notices"
+        description="School notices, notices for your class and website announcements."
+      />
+      {notices.length === 0 && (
+        <Card>
+          <p className="text-ink-soft">No notices yet.</p>
+        </Card>
+      )}
+      <div className="grid gap-3">
+        {notices.map((n) => (
+          <Card key={n.id}>
+            <div className="flex flex-wrap items-center gap-2">
+              {n.pinned && <Badge tone="yellow">Pinned</Badge>}
+              <Badge
+                tone={
+                  n.scope === "Your class"
+                    ? "yellow"
+                    : n.scope === "Website"
+                      ? "gray"
+                      : "blue"
+                }
+              >
+                {n.scope}
+              </Badge>
+              <span className="text-[13px] text-ink-soft">
+                {formatDate(n.publishedAt, {
+                  day: "numeric",
+                  month: "long",
+                  year: "numeric",
+                })}
+              </span>
             </div>
-        </>
-    );
+            <h2 className="mt-2 text-[17px] font-semibold text-ink">
+              {n.title}
+            </h2>
+            <p className="mt-1 text-[15px] text-ink-soft">{n.body}</p>
+            {n.pdfUrl && (
+              <a
+                href={n.pdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="mt-2 mr-4 inline-block text-[13.5px] font-semibold text-brand-deep"
+              >
+                Attached PDF ↗
+              </a>
+            )}
+            {n.slug && (
+              <Link
+                href={`/notices/${n.slug}`}
+                className="mt-2 inline-block text-[13.5px] font-semibold text-brand-deep"
+              >
+                Open on website →
+              </Link>
+            )}
+          </Card>
+        ))}
+      </div>
+    </>
+  );
 }

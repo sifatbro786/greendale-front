@@ -2,16 +2,18 @@ import { notFound } from "next/navigation";
 
 import { AttendanceCalendar, InvoiceTable, PaymentList, ResultsTable } from "@/components/dash/StudentBlocks";
 import Tabs from "@/components/dash/Tabs";
-import DemoButton from "@/components/dash/DemoButton";
+import StudentProfileActions from "@/components/dash/students/StudentProfileActions";
 import { Avatar, Badge, Card, DefinitionList, PageHead, StatCard } from "@/components/dash/ui";
 import { can } from "@/lib/auth/permissions";
 import { requirePermission } from "@/lib/auth/session";
-import { teacherSections } from "@/lib/dashboard/academics";
-import { studentAttendanceMonth, TODAY } from "@/lib/dashboard/attendance";
+import { unlessNotConnected } from "@/lib/dashboard/_dispatch";
+import { listSectionOptions, teacherSections } from "@/lib/dashboard/academics";
+import { studentAttendanceMonth, today } from "@/lib/dashboard/attendance";
 import { studentResults } from "@/lib/dashboard/exams";
 import { studentLedger } from "@/lib/dashboard/fees";
 import { getStudent } from "@/lib/dashboard/students";
 import { formatDate, formatMoney } from "@/lib/format";
+import { isDemo, isLive } from "@/lib/mode";
 
 export const metadata = { title: "Student profile" };
 
@@ -26,13 +28,19 @@ export default async function StudentProfilePage({ params }) {
     // "Own class" scope: a teacher asking for another student gets 404 (ids can't be probed).
     if (user.role === "TEACHER" && !(await teacherSections(user.staffId)).some((x) => x.value === s.sectionId)) notFound();
 
-    const [month, results, ledger] = await Promise.all([studentAttendanceMonth(id, TODAY.slice(0, 7)), studentResults(id), can(user, "fees.view") ? studentLedger(id) : null]);
     const canEdit = can(user, "students.manage");
+    // Results and fees go live in Step 4: until then those tabs are simply hidden in live mode.
+    const [month, results, ledger, sections] = await Promise.all([
+        studentAttendanceMonth(id, today().slice(0, 7)),
+        unlessNotConnected(studentResults(id)),
+        can(user, "fees.view") ? unlessNotConnected(studentLedger(id)) : null,
+        canEdit ? listSectionOptions() : [],
+    ]);
 
     const tabs = [
         { id: "overview", label: "Overview" },
         { id: "attendance", label: "Attendance" },
-        { id: "results", label: "Results" },
+        ...(results ? [{ id: "results", label: "Results" }] : []),
         ...(ledger ? [{ id: "fees", label: "Fees" }] : []),
     ];
 
@@ -42,26 +50,24 @@ export default async function StudentProfilePage({ params }) {
                 title={s.name}
                 crumbs={[{ label: "Dashboard", href: "/admin" }, { label: user.role === "TEACHER" ? "My classes" : "Students", href: "/admin/students" }, { label: s.name }]}
                 actions={
-                    canEdit && (
-                        <>
-                            <DemoButton className="btn-ghost min-h-10 text-[14px]" title="Password reset" message="Demo: a new one-time portal password would be generated and printed for the guardian.">
-                                Reset portal password
-                            </DemoButton>
-                            <DemoButton className="btn-primary min-h-10 text-[14px]">Edit profile</DemoButton>
-                        </>
-                    )
+                    canEdit && <StudentProfileActions student={s} sections={sections.map(({ value, label }) => ({ value, label }))} demo={isDemo} />
                 }
             />
 
             <div className="grid gap-4 xl:grid-cols-[340px_1fr]">
                 <Card>
                     <div className="flex items-center gap-4">
-                        <Avatar name={s.name} size="lg" tone="soft" />
+                        {isLive && s.hasPhoto ? (
+                            // eslint-disable-next-line @next/next/no-img-element -- private photo served by the API after a scope check
+                            <img src={`/api/students/${s.id}/photo`} alt="" className="size-16 shrink-0 rounded-full object-cover" />
+                        ) : (
+                            <Avatar name={s.name} size="lg" tone="soft" />
+                        )}
                         <div>
                             <p className="text-lg font-semibold text-ink">{s.name}</p>
                             <p className="text-[14px] text-ink-soft">{s.studentUid}</p>
                             <Badge tone={s.status === "ACTIVE" ? "green" : "gray"} className="mt-1.5">
-                                {s.status === "ACTIVE" ? "Active" : "Inactive"}
+                                {s.status === "ACTIVE" ? "Active" : s.status.charAt(0) + s.status.slice(1).toLowerCase()}
                             </Badge>
                         </div>
                     </div>
@@ -80,7 +86,7 @@ export default async function StudentProfilePage({ params }) {
                         </div>
                         <div className="rounded-xl bg-paper p-3">
                             <dt className="text-[12px] text-ink-soft">Dues</dt>
-                            <dd className={`font-semibold ${s.due ? "text-coral" : "text-ink"}`}>{ledger ? formatMoney(s.due) : "—"}</dd>
+                            <dd className={`font-semibold ${s.due ? "text-coral" : "text-ink"}`}>{can(user, "fees.view") ? formatMoney(s.due) : "—"}</dd>
                         </div>
                     </dl>
                     <a href={`tel:${s.guardianPhone.replace(/-/g, "")}`} className="btn-ghost mt-5 w-full text-[14px]">
@@ -123,13 +129,13 @@ export default async function StudentProfilePage({ params }) {
                             ),
                             attendance: (
                                 <div className="grid gap-6 lg:grid-cols-[1fr_260px]">
-                                    <AttendanceCalendar data={month} />
+                                    {month ? <AttendanceCalendar data={month} /> : <p className="text-ink-soft">Not enrolled in the current session.</p>}
                                     <div className="grid content-start gap-3">
                                         <StatCard label="This session" value={`${s.attendance.rate}%`} hint={`${s.attendance.absent} absent · ${s.attendance.late} late`} icon="CalendarCheck" />
                                     </div>
                                 </div>
                             ),
-                            results: <ResultsTable results={results} />,
+                            ...(results ? { results: <ResultsTable results={results} /> } : {}),
                             ...(ledger
                                 ? {
                                       fees: (

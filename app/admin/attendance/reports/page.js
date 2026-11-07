@@ -3,7 +3,7 @@ import { BarChart } from "@/components/dash/charts";
 import { Badge, Card, PageHead, Progress, StatCard } from "@/components/dash/ui";
 import { requirePermission } from "@/lib/auth/session";
 import { listSectionOptions } from "@/lib/dashboard/academics";
-import { attendanceSummary, attendanceTrend, monthlyReport, TODAY } from "@/lib/dashboard/attendance";
+import { attendanceSummary, attendanceTrend, monthlyReport, today } from "@/lib/dashboard/attendance";
 import { monthLabel } from "@/lib/dashboard/fees";
 import { formatDate } from "@/lib/format";
 
@@ -14,8 +14,9 @@ export const instant = false;
 
 export default async function AttendanceReportsPage() {
     await requirePermission("attendance.view");
+    const todayIso = today(); // after the cookie read, so it is per request
     const [summary, trend, sections] = await Promise.all([attendanceSummary(), attendanceTrend(10), listSectionOptions()]);
-    const month = TODAY.slice(0, 7);
+    const month = todayIso.slice(0, 7);
     const reports = {};
     for (const s of sections) reports[s.value] = await monthlyReport(s.value, month);
     const totals = summary.sections.reduce((a, s) => ({ absent: a.absent + s.absent, late: a.late + s.late }), { absent: 0, late: 0 });
@@ -24,7 +25,7 @@ export default async function AttendanceReportsPage() {
         <>
             <PageHead title="Attendance reports" description="Holidays and weekends are excluded automatically." crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Attendance", href: "/admin/attendance" }, { label: "Reports" }]} />
             <div className="grid gap-4 sm:grid-cols-3">
-                <StatCard label={`Today, ${formatDate(TODAY, { day: "numeric", month: "short" })}`} value={summary.rate == null ? "—" : `${summary.rate}%`} hint="Present + late" icon="CalendarCheck" />
+                <StatCard label={`Today, ${formatDate(todayIso, { day: "numeric", month: "short" })}`} value={summary.rate == null ? "—" : `${summary.rate}%`} hint="Present + late" icon="CalendarCheck" />
                 <StatCard label="Absent today" value={totals.absent} hint="Guardians get one SMS after 10:30" icon="CircleAlert" tone="coral" />
                 <StatCard label="Late today" value={totals.late} icon="Clock" tone="sun" />
             </div>

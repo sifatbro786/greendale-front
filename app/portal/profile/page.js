@@ -1,8 +1,9 @@
-import DemoButton from "@/components/dash/DemoButton";
+import ChangePasswordForm from "@/components/dash/admin/ChangePasswordForm";
 import { Avatar, Card, DefinitionList, PageHead } from "@/components/dash/ui";
 import { requireStudent } from "@/lib/auth/session";
 import { getStudent } from "@/lib/dashboard/students";
 import { formatDate } from "@/lib/format";
+import { isDemo } from "@/lib/mode";
 
 export const metadata = { title: "Profile" };
 
@@ -42,21 +43,7 @@ export default async function PortalProfile() {
                     />
                 </Card>
                 <Card title="Change password" description="At least 8 characters. You will stay signed in on this device.">
-                    <div className="space-y-4">
-                        <label className="block">
-                            <span className="text-[14px] font-medium">Current password</span>
-                            <input type="password" autoComplete="current-password" className={field} />
-                        </label>
-                        <label className="block">
-                            <span className="text-[14px] font-medium">New password</span>
-                            <input type="password" autoComplete="new-password" minLength={8} className={field} />
-                        </label>
-                        <label className="block">
-                            <span className="text-[14px] font-medium">Confirm new password</span>
-                            <input type="password" autoComplete="new-password" minLength={8} className={field} />
-                        </label>
-                        <DemoButton className="btn-primary w-full">Update password</DemoButton>
-                    </div>
+                    <ChangePasswordForm demo={isDemo} home="/portal" />
                 </Card>
             </div>
         </>

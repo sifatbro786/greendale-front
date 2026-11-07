@@ -2,7 +2,7 @@ import MonthSwitcher from "@/components/dash/MonthSwitcher";
 import { AttendanceCalendar } from "@/components/dash/StudentBlocks";
 import { Card, PageHead, StatCard } from "@/components/dash/ui";
 import { requireStudent } from "@/lib/auth/session";
-import { studentAttendanceMonth, TODAY } from "@/lib/dashboard/attendance";
+import { studentAttendanceMonth, today } from "@/lib/dashboard/attendance";
 import { monthLabel } from "@/lib/dashboard/fees";
 import { getStudent } from "@/lib/dashboard/students";
 
@@ -13,9 +13,10 @@ export const instant = false;
 
 export default async function PortalAttendance() {
     const user = await requireStudent();
+    const todayIso = today(); // after the cookie read, so it is per request
     const s = await getStudent(user.studentId);
-    const cur = Number(TODAY.slice(5, 7));
-    const months = Array.from({ length: cur }, (_, i) => `2026-${String(i + 1).padStart(2, "0")}`);
+    const cur = Number(todayIso.slice(5, 7));
+    const months = Array.from({ length: cur }, (_, i) => `${todayIso.slice(0, 4)}-${String(i + 1).padStart(2, "0")}`);
     const panels = {};
     for (const m of months) panels[m] = <AttendanceCalendar data={await studentAttendanceMonth(s.id, m)} />;
     return (

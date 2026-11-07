@@ -3,6 +3,7 @@ import { Card, PageHead } from "@/components/dash/ui";
 import { requireStudent } from "@/lib/auth/session";
 import { getRoutine } from "@/lib/dashboard/routine";
 import { getStudent } from "@/lib/dashboard/students";
+import { isDemo } from "@/lib/mode";
 
 export const metadata = { title: "Routine" };
 
@@ -17,7 +18,7 @@ export default async function PortalRoutine() {
         <>
             <PageHead title="Class routine" description={`${s.section} · Sunday to Thursday`} />
             <Card padded={false}>
-                <RoutineGrid options={[{ value: s.sectionId, label: s.section }]} routines={{ [s.sectionId]: routine }} />
+                <RoutineGrid options={[{ value: s.sectionId, label: s.section }]} routines={{ [s.sectionId]: routine }} initial={routine} demo={isDemo} />
             </Card>
         </>
     );
