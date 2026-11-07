@@ -6,11 +6,11 @@
  */
 import { z } from "zod";
 
-import { verifyCredentials } from "@/lib/auth/demo-users";
 import { homeFor } from "@/lib/auth/permissions";
 import { SESSION_COOKIE, SESSION_TTL_SECONDS, signSession } from "@/lib/auth/session-token";
 import { fail, guardJsonPost, issues, ok } from "@/lib/server/envelope";
 import { clientIp, rateLimit } from "@/lib/server/rate-limit";
+import { isLive } from "@/lib/mode";
 
 const schema = z.object({
     identifier: z.string().trim().min(3, "Enter your email or student ID.").max(120),
@@ -27,6 +27,8 @@ function safeNext(next, role) {
 }
 
 export async function POST(request) {
+    // Live mode: /api/* belongs to Express (rewrite / Nginx). Never authenticate demo accounts here.
+    if (isLive) return fail(404, "NOT_FOUND", "Not found");
     const stop = guardJsonPost(request);
     if (stop) return stop;
 
@@ -36,6 +38,8 @@ export async function POST(request) {
     const parsed = schema.safeParse(await request.json().catch(() => ({})));
     if (!parsed.success) return fail(400, "BAD_REQUEST", "Invalid request", issues(parsed.error));
 
+    // Loaded on demand: the live build must never evaluate lib/demo (lib/demo/seed.js throws in live mode).
+    const { verifyCredentials } = await import("@/lib/auth/demo-users");
     const user = verifyCredentials(parsed.data.identifier, parsed.data.password);
     if (!user) return fail(401, "INVALID_CREDENTIALS", "Wrong email / student ID or password.");
 

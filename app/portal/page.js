@@ -2,6 +2,7 @@ import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { Avatar, Badge, Card, StatCard } from "@/components/dash/ui";
+import { hasModule } from "@/lib/auth/permissions";
 import { requireStudent } from "@/lib/auth/session";
 import { studentAttendanceMonth, today as todayFn } from "@/lib/dashboard/attendance";
 import { portalNotices } from "@/lib/dashboard/comms";
@@ -21,15 +22,16 @@ export default async function PortalHome() {
     const s = await getStudent(user.studentId);
     const TODAY = todayFn(); // after the auth read (cache components)
     const [month, results, ledger, notices, exams, routine] = await Promise.all([
-        studentAttendanceMonth(s.id, TODAY.slice(0, 7)),
-        studentResults(s.id),
-        studentLedger(s.id),
+        hasModule(user, "attendance") ? studentAttendanceMonth(s.id, TODAY.slice(0, 7)) : null,
+        hasModule(user, "results") ? studentResults(s.id) : [],
+        hasModule(user, "fees") ? studentLedger(s.id) : null,
         portalNotices(s.id),
-        upcomingExams(),
-        s.sectionId ? getRoutine({ sectionId: s.sectionId }) : null,
+        hasModule(user, "results") ? upcomingExams() : [],
+        s.sectionId && hasModule(user, "routine") ? getRoutine({ sectionId: s.sectionId }) : null,
     ]);
     const latest = results.at(-1);
-    const rate = month.present + month.late + month.absent ? Math.round(((month.present + month.late) / (month.present + month.late + month.absent)) * 100) : 0;
+    const att = month ?? { present: 0, late: 0, absent: 0 };
+    const rate = att.present + att.late + att.absent ? Math.round(((att.present + att.late) / (att.present + att.late + att.absent)) * 100) : 0;
     // Today's class routine for the student's section
     const day = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][new Date(`${TODAY}T00:00:00Z`).getUTCDay()];
     const periods = new Map((routine?.periods ?? []).map((p) => [p.id, p]));
@@ -51,7 +53,7 @@ export default async function PortalHome() {
                             {s.section} · Roll {s.roll} · {s.studentUid}
                         </p>
                     </div>
-                    {ledger.totals.due > 0 ? (
+                    {!ledger ? null : ledger.totals.due > 0 ? (
                         <Link href="/portal/fees" className="btn-sun w-max">
                             Pay {formatMoney(ledger.totals.due)}
                         </Link>
@@ -62,9 +64,9 @@ export default async function PortalHome() {
             </section>
 
             <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <StatCard label="Attendance this month" value={`${rate}%`} hint={`${month.absent} absent · ${month.late} late`} icon="CalendarCheck" href="/portal/attendance" />
+                <StatCard label="Attendance this month" value={`${rate}%`} hint={`${att.absent} absent · ${att.late} late`} icon="CalendarCheck" href="/portal/attendance" />
                 <StatCard label="Latest result" value={latest ? (latest.gpa != null ? `GPA ${latest.gpa.toFixed(2)}` : "Published") : "—"} hint={latest ? `${latest.exam.name}${latest.grade ? ` · ${latest.grade}` : " · progress report"}` : "No published result"} icon="Award" tone="sun" href="/portal/results" />
-                <StatCard label="Current dues" value={formatMoney(ledger.totals.due)} hint={ledger.totals.due ? "Pay online or at the office" : "Nothing due"} icon="Wallet" tone={ledger.totals.due ? "coral" : "brand"} href="/portal/fees" />
+                {ledger && <StatCard label="Current dues" value={formatMoney(ledger.totals.due)} hint={ledger.totals.due ? "Pay online or at the office" : "Nothing due"} icon="Wallet" tone={ledger.totals.due ? "coral" : "brand"} href="/portal/fees" />}
                 <StatCard label="Next exam" value={exams[0]?.startDate ? formatDate(exams[0].startDate, { day: "numeric", month: "short" }) : exams[0] ? "Soon" : "—"} hint={exams[0]?.name} icon="ClipboardList" tone="sky" href="/portal/admit-card" />
             </div>
 

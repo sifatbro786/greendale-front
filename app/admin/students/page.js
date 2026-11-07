@@ -1,4 +1,5 @@
 import DataTable from "@/components/dash/DataTable";
+import ImportStudents from "@/components/dash/students/ImportStudents";
 import StudentAdmit from "@/components/dash/students/StudentAdmit";
 import { Card, PageHead } from "@/components/dash/ui";
 import { can } from "@/lib/auth/permissions";
@@ -38,7 +39,14 @@ export default async function StudentsPage() {
                 title={teacher ? "My classes" : "Students"}
                 description={teacher ? "Students in the sections you teach. Guardian numbers are for school use only." : `${rows.length} students${current ? ` in session ${current}` : ""}. Each student keeps one profile for life; class and roll are stored per year.`}
                 crumbs={[{ label: "Dashboard", href: "/admin" }, { label: teacher ? "My classes" : "Students" }]}
-                actions={canManage ? <StudentAdmit sections={sections.map(({ value, label }) => ({ value, label }))} sessions={sessions} demo={isDemo} /> : null}
+                actions={
+                    canManage ? (
+                        <>
+                            <ImportStudents demo={isDemo} />
+                            <StudentAdmit sections={sections.map(({ value, label }) => ({ value, label }))} sessions={sessions} demo={isDemo} />
+                        </>
+                    ) : null
+                }
             />
             <Card padded={false}>
                 <DataTable

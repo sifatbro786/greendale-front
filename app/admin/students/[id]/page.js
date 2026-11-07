@@ -2,15 +2,15 @@ import { notFound } from "next/navigation";
 
 import { AttendanceCalendar, InvoiceTable, PaymentList, ResultsTable } from "@/components/dash/StudentBlocks";
 import Tabs from "@/components/dash/Tabs";
+import WaiverEditor from "@/components/dash/fees/WaiverEditor";
 import StudentProfileActions from "@/components/dash/students/StudentProfileActions";
 import { Avatar, Badge, Card, DefinitionList, PageHead, StatCard } from "@/components/dash/ui";
-import { can } from "@/lib/auth/permissions";
+import { can, hasModule } from "@/lib/auth/permissions";
 import { requirePermission } from "@/lib/auth/session";
-import { unlessNotConnected } from "@/lib/dashboard/_dispatch";
 import { listSectionOptions, teacherSections } from "@/lib/dashboard/academics";
 import { studentAttendanceMonth, today } from "@/lib/dashboard/attendance";
 import { studentResults } from "@/lib/dashboard/exams";
-import { studentLedger } from "@/lib/dashboard/fees";
+import { listConcessions, studentLedger } from "@/lib/dashboard/fees";
 import { getStudent } from "@/lib/dashboard/students";
 import { formatDate, formatMoney } from "@/lib/format";
 import { isDemo, isLive } from "@/lib/mode";
@@ -29,12 +29,14 @@ export default async function StudentProfilePage({ params }) {
     if (user.role === "TEACHER" && !(await teacherSections(user.staffId)).some((x) => x.value === s.sectionId)) notFound();
 
     const canEdit = can(user, "students.manage");
-    // Fees tab only for fees.view holders.
-    const [month, results, ledger, sections] = await Promise.all([
-        studentAttendanceMonth(id, today().slice(0, 7)),
-        unlessNotConnected(studentResults(id)),
-        can(user, "fees.view") ? unlessNotConnected(studentLedger(id)) : null,
+    // Results / fees tabs only when the module is on (and fees only for fees.view holders).
+    const feesOn = can(user, "fees.view") && hasModule(user, "fees");
+    const [month, results, ledger, sections, waivers] = await Promise.all([
+        hasModule(user, "attendance") ? studentAttendanceMonth(id, today().slice(0, 7)) : null,
+        hasModule(user, "results") ? studentResults(id) : null,
+        feesOn ? studentLedger(id) : null,
         canEdit ? listSectionOptions() : [],
+        feesOn ? listConcessions(id) : null,
     ]);
 
     const tabs = [
@@ -150,6 +152,7 @@ export default async function StudentProfilePage({ params }) {
                                                   <h3 className="text-[15px] font-semibold text-ink">Payments</h3>
                                                   <PaymentList payments={ledger.payments.slice(0, 8)} receiptHref={(pid) => `/admin/fees/payments/${pid}`} />
                                               </div>
+                                              {waivers && <WaiverEditor studentId={s.id} data={waivers} canManage={can(user, "fees.manage")} demo={isDemo} />}
                                           </div>
                                       ),
                                   }

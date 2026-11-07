@@ -4,7 +4,7 @@ import Link from "next/link";
 import { BarChart, LineChart } from "@/components/dash/charts";
 import Greeting from "@/components/dash/Greeting";
 import { Badge, Card, PageHead, Progress, StatCard } from "@/components/dash/ui";
-import { can } from "@/lib/auth/permissions";
+import { can, hasModule } from "@/lib/auth/permissions";
 import { requireStaff } from "@/lib/auth/session";
 import { teacherSections } from "@/lib/dashboard/academics";
 import { attendanceSummary, attendanceTrend, today as todayFn } from "@/lib/dashboard/attendance";
@@ -20,13 +20,25 @@ export const metadata = { title: "Dashboard" };
 /** Signed-in, per-user screen: renders at request time (see app/admin/layout.js). */
 export const instant = false;
 
+/** Shapes used when the school turned a module off (settings → modules). */
+const NO_ATTENDANCE = { rate: null, pending: [], sections: [] };
+
 export default async function DashboardPage() {
     const user = await requireStaff();
     if (user.role === "TEACHER") return <TeacherHome user={user} />;
 
-    const canFees = can(user, "fees.view");
+    const canFees = can(user, "fees.view") && hasModule(user, "fees");
+    const onAtt = hasModule(user, "attendance");
+    const onExams = hasModule(user, "results");
     const TODAY = todayFn(); // after the auth read (cache components)
-    const [counts, att, trend, fees, exams, notices] = await Promise.all([studentCounts(), attendanceSummary(), attendanceTrend(14), canFees ? feeSummary() : null, upcomingExams(), listStaffNotices()]);
+    const [counts, att, trend, fees, exams, notices] = await Promise.all([
+        studentCounts(),
+        onAtt ? attendanceSummary() : NO_ATTENDANCE,
+        onAtt ? attendanceTrend(14) : [],
+        canFees ? feeSummary() : null,
+        onExams ? upcomingExams() : [],
+        listStaffNotices(),
+    ]);
     const first = user.name.split(" ")[0];
 
     return (
@@ -108,7 +120,7 @@ export default async function DashboardPage() {
                 </Card>
 
                 <Card title="Exams" padded={false} actions={<Link href="/admin/exams" className="text-[13.5px] font-semibold text-brand-deep hover:text-brand">Open →</Link>}>
-                    <ExamList />
+                    <ExamList on={onExams} />
                 </Card>
 
                 <Card title="Latest notices" padded={false} actions={<Link href="/admin/notices" className="text-[13.5px] font-semibold text-brand-deep hover:text-brand">All →</Link>}>
@@ -135,8 +147,9 @@ export default async function DashboardPage() {
     );
 }
 
-async function ExamList() {
-    const exams = await listExams();
+async function ExamList({ on = true }) {
+    const exams = on ? await listExams() : [];
+    if (!exams.length) return <p className="px-5 py-8 text-center text-ink-soft">{on ? "No exams yet." : "Exams are turned off for this school."}</p>;
     return (
         <ul className="divide-y divide-line">
             {exams.map((e) => (
@@ -171,7 +184,13 @@ function QuickLink({ href, icon, title, text }) {
 /* ------------------------------ Teacher ------------------------------ */
 async function TeacherHome({ user }) {
     const TODAY = todayFn();
-    const [today, sections, att, notices, exams] = await Promise.all([teacherToday(user.staffId, TODAY), teacherSections(user.staffId), attendanceSummary(), listStaffNotices(), listExams()]);
+    const [today, sections, att, notices, exams] = await Promise.all([
+        hasModule(user, "routine") ? teacherToday(user.staffId, TODAY) : [],
+        teacherSections(user.staffId),
+        hasModule(user, "attendance") ? attendanceSummary() : NO_ATTENDANCE,
+        listStaffNotices(),
+        hasModule(user, "results") ? listExams() : [],
+    ]);
     const mySections = att.sections.filter((s) => sections.some((x) => x.value === s.sectionId));
     const classTeacherOf = sections.filter((s) => s.isClassTeacher);
     const open = exams.find((e) => e.status === "MARKS_OPEN");

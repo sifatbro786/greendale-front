@@ -26,7 +26,7 @@ export default function PortalLayout({ children }) {
 async function PortalFrame({ children }) {
     const user = await requireStudent();
     return (
-        <Frame user={user} nav={portalNav} area="portal">
+        <Frame user={user} nav={portalNav(user)} area="portal">
             {children}
         </Frame>
     );
