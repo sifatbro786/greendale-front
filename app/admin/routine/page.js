@@ -4,7 +4,7 @@ import { Card, PageHead } from "@/components/dash/ui";
 import { can } from "@/lib/auth/permissions";
 import { requirePermission } from "@/lib/auth/session";
 import { listSectionOptions } from "@/lib/dashboard/academics";
-import { db } from "@/lib/dashboard/_shared";
+import { db } from "@/lib/demo/dashboard/_shared";
 import { getRoutine } from "@/lib/dashboard/routine";
 
 export const metadata = { title: "Routine" };

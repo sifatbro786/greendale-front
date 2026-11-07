@@ -1,9 +1,9 @@
-import { Check, UserPlus } from "lucide-react";
+import { Check, Plus, UserPlus } from "lucide-react";
+import Link from "next/link";
 
 import DataTable from "@/components/dash/DataTable";
-import DemoButton from "@/components/dash/DemoButton";
 import { Card, PageHead } from "@/components/dash/ui";
-import { PERMISSION_GROUPS, ROLE_LABEL } from "@/lib/auth/permissions";
+import { PERMISSION_GROUPS } from "@/lib/auth/permissions";
 import { requirePermission } from "@/lib/auth/session";
 import { listRoles, listUsers } from "@/lib/dashboard/users";
 
@@ -22,25 +22,36 @@ export default async function UsersPage() {
                 description="A role is a set of permissions. The API checks every request, so hiding a menu is never the only protection."
                 crumbs={[{ label: "Dashboard", href: "/admin" }, { label: "Users & roles" }]}
                 actions={
-                    <DemoButton className="btn-primary min-h-10 text-[14px]">
+                    <Link href="/admin/users/new" className="btn-primary min-h-10 text-[14px]">
                         <UserPlus className="size-4" aria-hidden="true" /> Add user
-                    </DemoButton>
+                    </Link>
                 }
             />
             <Card padded={false}>
                 <DataTable
-                    rows={users.map((u) => ({ ...u, roleLabel: ROLE_LABEL[u.role] }))}
+                    rows={users.map((u) => ({ ...u, roleLabel: u.roleName, status: u.locked && u.status === "ACTIVE" ? "LOCKED" : u.status }))}
+                    rowHref="/admin/users/{id}"
                     columns={[
                         { key: "name", label: "User", type: "person", sub: "login" },
                         { key: "roleLabel", label: "Role" },
-                        { key: "lastLogin", label: "Last sign-in", type: "datetime" },
+                        { key: "lastLogin", label: "Last sign-in", type: "datetime", hideOnMobile: true },
                         { key: "status", label: "Status", type: "badge" },
                     ]}
                     searchKeys={["name", "login"]}
-                    filters={[{ key: "role", label: "Role", options: Object.entries(ROLE_LABEL).filter(([k]) => k !== "STUDENT").map(([value, label]) => ({ value, label })) }]}
+                    filters={[{ key: "role", label: "Role", options: roles.map((r) => ({ value: r.role, label: r.label })) }]}
                 />
             </Card>
-            <Card title="Permissions by role" description="Defaults from the PRD. The school can add custom roles later." className="mt-4" padded={false}>
+            <Card
+                title="Permissions by role"
+                description="Open a role to change what it can do. Changes apply on each user's next page load."
+                className="mt-4"
+                padded={false}
+                actions={
+                    <Link href="/admin/users/roles/new" className="btn-ghost min-h-10 text-[14px]">
+                        <Plus className="size-4" aria-hidden="true" /> New role
+                    </Link>
+                }
+            >
                 <div className="overflow-x-auto">
                     <table className="w-full min-w-[820px] text-left text-[13.5px]">
                         <thead>
@@ -48,7 +59,9 @@ export default async function UsersPage() {
                                 <th className="px-5 py-3 text-[12.5px] font-semibold tracking-wide text-ink-soft uppercase">Permission</th>
                                 {roles.map((r) => (
                                     <th key={r.role} className="px-3 py-3 text-center text-[12.5px] font-semibold text-ink">
-                                        {r.label}
+                                        <Link href={`/admin/users/roles/${r.id}`} className="underline decoration-line underline-offset-4 hover:text-brand hover:decoration-brand">
+                                            {r.label}
+                                        </Link>
                                     </th>
                                 ))}
                             </tr>

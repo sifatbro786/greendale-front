@@ -1,7 +1,7 @@
 import MarksEntry from "@/components/dash/MarksEntry";
 import { PageHead } from "@/components/dash/ui";
 import { requirePermission } from "@/lib/auth/session";
-import { db, sectionLabel, subjectMap } from "@/lib/dashboard/_shared";
+import { db, sectionLabel, subjectMap } from "@/lib/demo/dashboard/_shared";
 import { getMarksSheet, listExams } from "@/lib/dashboard/exams";
 
 export const metadata = { title: "Marks entry" };

@@ -8,7 +8,7 @@ import { portalNotices } from "@/lib/dashboard/comms";
 import { studentResults, upcomingExams } from "@/lib/dashboard/exams";
 import { studentLedger } from "@/lib/dashboard/fees";
 import { getStudent } from "@/lib/dashboard/students";
-import { db } from "@/lib/dashboard/_shared";
+import { db } from "@/lib/demo/dashboard/_shared";
 import { formatDate, formatMoney } from "@/lib/format";
 
 export const metadata = { title: "Home" };

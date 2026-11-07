@@ -6,7 +6,7 @@ import { can } from "@/lib/auth/permissions";
 import { requireStaff } from "@/lib/auth/session";
 import { listSectionOptions, teacherSections } from "@/lib/dashboard/academics";
 import { getAttendanceSheet, TODAY } from "@/lib/dashboard/attendance";
-import { lastSchoolDays } from "@/lib/dashboard/_shared";
+import { lastSchoolDays } from "@/lib/demo/dashboard/_shared";
 import { redirect } from "next/navigation";
 
 export const metadata = { title: "Attendance" };

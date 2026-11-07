@@ -3,7 +3,7 @@ import { PageHead } from "@/components/dash/ui";
 import { school } from "@/config/school";
 import { requirePermission } from "@/lib/auth/session";
 import { listSectionOptions } from "@/lib/dashboard/academics";
-import { db } from "@/lib/dashboard/_shared";
+import { db } from "@/lib/demo/dashboard/_shared";
 import { listExams } from "@/lib/dashboard/exams";
 import { listStudents } from "@/lib/dashboard/students";
 

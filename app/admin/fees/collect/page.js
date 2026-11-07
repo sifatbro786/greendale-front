@@ -1,7 +1,7 @@
 import FeeCollector from "@/components/dash/FeeCollector";
 import { PageHead } from "@/components/dash/ui";
 import { requirePermission } from "@/lib/auth/session";
-import { db, enrollmentByStudent, feeHeadMap, invoiceDue, sectionLabel } from "@/lib/dashboard/_shared";
+import { db, enrollmentByStudent, feeHeadMap, invoiceDue, sectionLabel } from "@/lib/demo/dashboard/_shared";
 import { monthLabel } from "@/lib/dashboard/fees";
 
 export const metadata = { title: "Collect fee" };

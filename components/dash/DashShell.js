@@ -1,6 +1,6 @@
 "use client";
 
-import { Bell, ChevronsUpDown, ExternalLink, LogOut, Menu, X } from "lucide-react";
+import { Bell, ChevronsUpDown, ExternalLink, KeyRound, LogOut, Menu, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -108,7 +108,7 @@ export default function DashShell({ demo = false, user, nav, area, logo, childre
                                     <Bell className="size-5" aria-hidden="true" />
                                     <span className="absolute top-2 right-2 size-2 rounded-full bg-coral ring-2 ring-white" />
                                 </Link>
-                                <UserMenu user={user} />
+                                <UserMenu user={user} area={area} />
                             </div>
                         </div>
                     </header>
@@ -119,7 +119,7 @@ export default function DashShell({ demo = false, user, nav, area, logo, childre
     );
 }
 
-function UserMenu({ user }) {
+function UserMenu({ user, area }) {
     const [open, setOpen] = useState(false);
     const [busy, setBusy] = useState(false);
     const ref = useRef(null);
@@ -162,6 +162,10 @@ function UserMenu({ user }) {
                         <p className="text-[13px] text-ink-soft">{user.subtitle ?? user.roleLabel}</p>
                     </div>
                     <div className="my-1 border-t border-line" />
+                    <Link href={`/${area}/account`} onClick={() => setOpen(false)} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] text-ink hover:bg-paper">
+                        <KeyRound className="size-4" aria-hidden="true" />
+                        Change password
+                    </Link>
                     <button type="button" onClick={logout} disabled={busy} className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[14px] text-ink hover:bg-coral-soft hover:text-coral">
                         <LogOut className="size-4" aria-hidden="true" />
                         {busy ? "Signing out…" : "Sign out"}
