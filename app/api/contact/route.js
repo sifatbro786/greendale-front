@@ -1,13 +1,12 @@
 /**
- * POST /api/contact — DEMO contact form (DATA_MODE=demo, Vercel): sends the email directly with Nodemailer.
- * Live mode: /api/* goes to Express (next.config rewrite locally, Nginx on the VPS), which stores a
- * ContactMessage and emails through the queue. Same request and envelope in both modes:
- *   200 { data: { sent: true } } · 400 BAD_REQUEST (details) · 413 · 415 · 429 · 502/503
+ * POST /api/contact — DEMO contact form only (DATA_MODE=demo, Vercel client preview).
+ * Validates exactly like the API and answers success, but sends nothing: the demo has no mail server.
+ * Live mode never reaches this file: /api/* goes to Express (next.config rewrite locally, Nginx on the VPS),
+ * which stores a ContactMessage and emails the office through the queue. Same request and envelope in both modes:
+ *   200 { data: { sent: true } } · 400 BAD_REQUEST (details) · 413 · 415 · 429
  */
-import { school } from "@/config/school";
 import { contactSchema } from "@/lib/server/contact-schema";
 import { fail, guardJsonPost, issues, ok } from "@/lib/server/envelope";
-import { escapeHtml, getTransporter } from "@/lib/server/mailer";
 import { clientIp, rateLimit } from "@/lib/server/rate-limit";
 
 const MAX_BODY = 10_000;
@@ -40,36 +39,7 @@ export async function POST(request) {
     const parsed = contactSchema.safeParse(body);
     if (!parsed.success) return fail(400, "BAD_REQUEST", "Invalid request", issues(parsed.error));
 
-    const d = parsed.data;
-    const transporter = getTransporter();
-    const to = process.env.CONTACT_TO || school.contact.email;
-    if (!transporter || !to) {
-        console.error("[contact] SMTP or CONTACT_TO not configured");
-        return fail(503, "SERVICE_UNAVAILABLE", `Our message service is not ready yet. Please call ${school.contact.phone}.`);
-    }
-
-    const rows = [
-        ["Name", d.name],
-        ["Phone", d.phone],
-        ["Email", d.email || "-"],
-        ["Subject", d.subject],
-        ["Message", d.message],
-    ];
-    try {
-        await transporter.sendMail({
-            from: process.env.MAIL_FROM || process.env.SMTP_USER,
-            to,
-            replyTo: d.email || undefined,
-            subject: `[Website] ${d.subject} enquiry from ${d.name}`,
-            text: rows.map(([k, v]) => `${k}: ${v}`).join("\n"),
-            html: `<table cellpadding="6" style="font-family:Arial,sans-serif;font-size:14px">${rows
-                .map(([k, v]) => `<tr><td style="color:#555;vertical-align:top"><b>${k}</b></td><td style="white-space:pre-wrap">${escapeHtml(v)}</td></tr>`)
-                .join("")}</table><p style="color:#888;font-size:12px">Sent from the website contact form · IP ${escapeHtml(ip)}</p>`,
-        });
-    } catch (err) {
-        console.error("[contact] sendMail failed", err?.message);
-        return fail(502, "BAD_GATEWAY", `We could not send your message. Please call ${school.contact.phone}.`);
-    }
-
+    // Demo: nothing is sent or stored. Log only the subject so the Vercel log shows the form works.
+    console.info(`[contact:demo] ${parsed.data.subject} enquiry received (not sent, demo mode)`);
     return ok({ sent: true });
 }

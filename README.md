@@ -4,7 +4,7 @@ Public site (Phase 1). Later phases add `/admin`, `/portal` and the Express API 
 
 ```bash
 npm install
-cp .env.example .env.local   # fill SMTP_* and CONTACT_TO for the contact form
+cp .env.example .env.local   # DATA_MODE=demo for the Vercel demo, live + API_INTERNAL_URL for local/VPS
 npm run dev                  # http://localhost:3000
 npm run build && npm start   # production (PM2 on the VPS runs `next start -p 3000`)
 ```
@@ -18,5 +18,5 @@ npm run build && npm start   # production (PM2 on the VPS runs `next start -p 30
 - Next 16 with `cacheComponents` + `partialPrefetching`: `params` is a Promise; no `dynamicParams`; dynamic routes use `generateStaticParams`.
 
 ## Deploy
-- Now: Vercel (set `NEXT_PUBLIC_SITE_URL`, SMTP vars). Previews are `noindex` via `app/robots.js`.
+- Now: Vercel (set `DATA_MODE=demo`, `NEXT_PUBLIC_SITE_URL`, `SESSION_SECRET`; no SMTP needed). Previews are `noindex` via `app/robots.js`.
 - Later: VPS + PM2 + Nginx exactly as PRD §12 (never `output: 'export'`).
